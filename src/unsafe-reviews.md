@@ -8,17 +8,30 @@ keyword are kept small then reviews won't trigger too often. However, it may als
 when unsafe code relies on properties outside files with the unsafe keyword (like robust
 implementations).
 
+## Sound triggering
+
 If the robust keyword existed, unsafe reviews could trigger on files containing any of those 2
 keywords. By making sure during unsafe review that proofs only rely on documented robust properties
 (parameter of unsafe function or result of robust function), this would make sure that unsafe review
 will trigger each time it is needed.
+
+Here are some examples of proofs that depended on undocumented or incorrect robustness:
+- <https://github.com/rust-lang/regex/pull/1154>
+- <https://github.com/rust-lang/rust/issues/80335>
+- <https://rustsec.org/advisories/RUSTSEC-2024-0019.html>
+
+## Burden of proof
 
 To avoid increasing the burden of unsafe reviews, it is important that items are not documented as
 robust unless it is known that a proof relies on them. To ensure this, robust items should also
 document in their robustness section which crates rely on their robustness. This could alternatively
 be tracked in a separate global tool like [`cargo-vet`][cargo-vet].
 
-## Lints
+For example, one should not implement [`TrustedLen`][TrustedLen] unless it is relied upon somewhere.
+This is deliberately a borderline example to show that it is actually a trade-off between increasing
+the burden of proof and implementing possibly useful functionalities.
+
+## Recommended lints
 
 It is almost obligatory to enable [unsafe-op-in-unsafe-fn] which is allowed-by-default up to edition
 2021 and warn-by-default starting from edition 2024. Not using this lint will:
@@ -42,6 +55,7 @@ multiple-unsafe-ops-per-block. Both together ensure that there is a one-to-one c
 between the usage of unsafe superpower and the safety comment proving its soundness, thus
 simplifying unsafe reviews.
 
+[TrustedLen]: https://doc.rust-lang.org/std/iter/trait.TrustedLen.html
 [cargo-vet]: https://github.com/mozilla/cargo-vet
 [multiple-unsafe-ops-per-block]: https://rust-lang.github.io/rust-clippy/master/index.html#/multiple_unsafe_ops_per_block
 [undocumented-unsafe-blocks]: https://rust-lang.github.io/rust-clippy/master/index.html#/undocumented_unsafe_blocks

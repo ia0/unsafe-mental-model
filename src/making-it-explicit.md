@@ -103,8 +103,8 @@ Safety comments can both produce and use proofs from the update type.
 
 Notice how in the previous section, `into_non_null()` replaces the robustness of `into_raw()` with
 the safety invariant of `NonNull`, essentially giving a name to its anonymous result type. This is
-done by having `NonNull<T>` be a custom type around `Update<*mut T>` (ignoring alignment and
-variance for simplicity).
+done by having `NonNull<T>` be a custom type around `Update<*mut T>`. We'll ignore alignment and
+variance for simplicity. We'll also ignore the rustc annotations that shrink the validity invariant.
 
 ```rust
 {{#include code.rs:non-null}}

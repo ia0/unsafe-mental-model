@@ -81,11 +81,21 @@ behind the definition of `Foo`. We have to introduce the anonymous type on `Foo`
 thing visible, and add those unsafe values.
 
 It is also possible for a custom type definition to have an anonymous type. This is for example the
-case of `NonZeroI32`. Its definition is an anonymous type on `i32` removing the safe value zero. The
-safety invariant of `NonZeroI32` thus doesn't contain zero, making zero an unsafe value for that
-type. One may want to add this unsafe value for some specific occurrences of `NonZeroI32`, requiring
-again anonymous types to add unsafe values. This time it's not only because the definition is
-hidden, but also because we want to revert the effect of an anonymous type adding back a value that
-was removed.
+case of `Vec<i32>`. Its simplified definition is an anonymous type on `{ ptr: *mut i32, len: usize,
+cap: usize }` removing some safe values. We'll focus on the safe values where not all of the first
+`len` elements pointed by `ptr` are initialized. The safety invariant of `Vec<i32>` thus doesn't
+contain those (otherwise safe) values, making a pointer to uninitialized data with non-zero length
+an unsafe value for that type. One may want to add those unsafe values for some specific occurrences
+of `Vec<i32>`, requiring again an anonymous type. This time it's not only because the definition is
+hidden, but also because we want to revert the effect of an anonymous type adding back values that
+were removed.
+
+Note that, while anonymous types in custom types define a new safety invariant, it is also possible
+to define custom types with a different validity invariant using rustc annotations. For example,
+`NonZeroI32` has the value zero removed from both the safety invariant and the validity invariant.
+This type doesn't have any unsafe value. It is thus not possible to create an unsafe version of that
+type. If you would remove the rustc annotations and keep the anonymous type, then zero would not be
+safe but still be valid, and thus it would be an unsafe value that can be added to create an unsafe
+version of that type.
 
 [two-invariants]: https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html

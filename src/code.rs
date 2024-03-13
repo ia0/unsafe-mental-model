@@ -48,15 +48,6 @@ pub fn read<T>(ptr: Update<*const T>) -> T;
 pub fn get_unchecked_mut<T>(pin: Pin<&mut T>) -> Update<&mut T>
 // ANCHOR_END: pin-get-unchecked-mut
 
-// ANCHOR: pin-get-unchecked-mut-split
-/// Gets a mutable reference to the pinned data.
-///
-/// # Safety
-///
-/// The data in the result at the end of the borrow has not been moved.
-pub fn get_unchecked_mut<T>(pin: Pin<&mut T>) -> &mut [T .. Update<T>]
-// ANCHOR_END: pin-get-unchecked-mut-split
-
 // ANCHOR: box-into-raw
 /// Consumes a box returning its raw pointer.
 ///

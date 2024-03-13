@@ -49,19 +49,11 @@ less safe values, thus providing permissions to use.
 ```
 
 Less common examples are results of unsafe functions. The results are unsafe making the function
-unsafe due to co-variance. And they are unsafe because they have unsafe values (see next paragraph
-for details), thus enforcing restrictions to use.
+unsafe due to co-variance. And they are unsafe because they have unsafe values, thus enforcing
+restrictions to use.
 
 ```rust
 {{#include code.rs:pin-get-unchecked-mut}}
-```
-
-The result in this last example is unsafe because the final value of the mutable reference is robust
-and contra-variant. We can rewrite that same example with the version of mutable references that
-distinguishes between the owned type and the type to return to the lender at the end of the borrow.
-
-```rust
-{{#include code.rs:pin-get-unchecked-mut-split}}
 ```
 
 ### Robustness documentation

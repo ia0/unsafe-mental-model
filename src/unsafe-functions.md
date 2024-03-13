@@ -15,8 +15,6 @@ would translate to (preserving any safety documentation):
 ```rust
 fn read<T>(ptr: Update<*const T>) -> T;
 fn get_unchecked_mut<T>(pin: Pin<&mut T>) -> Update<&mut T>
-// or with the unfolded mutable reference notation:
-fn get_unchecked_mut<T>(pin: Pin<&mut T>) -> &mut [T .. Update<T>]
 ```
 
 It is also possible that the predicate isn't about a single type, in which case it may be more

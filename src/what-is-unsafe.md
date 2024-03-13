@@ -56,9 +56,11 @@ Similarly for the mutable reference type `&mut T`, which I'll write `&mut [T .. 
 the last paragraph of the previous chapter if this is unclear). By contra-variance, it is unsafe if
 `S` is robust. This is the case with the result type of `String::as_mut_vec() -> &mut Vec<u8>` that
 requires permissions to use `S` as UTF-8 (removing the safe values of `Vec<u8>` that are not UTF-8).
-Note also how the restriction on the result type of `Pin::get_unchecked_mut() -> &mut T` is actually
-a permission on its value at the end of the lifetime, such that after the borrow the lender can
-assume the value did not move.
+By co-variance, it is unsafe if `T` is unsafe. This is the case with the result type of
+`Pin::get_unchecked_mut() -> &mut T` that enforces restrictions to use `T` as possibly pinned
+(adding the unsafe values that are safe when under `Pin`). Note that `S` also has restrictions to
+use (the same ones as `T`), thus by contra-variance making the result type and thus the type of
+`Pin::get_unchecked_mut()` robust (remember that types may be both unsafe and robust).
 
 ## Custom types
 

@@ -15,6 +15,12 @@ The mental model is inspired by the following concepts:
 - [Dependent types][dependent-type] for predicates to depend on the execution environment (the
   memory, variables, etc). In particular, the update type is the sigma type.
 - [Denotational semantics][denotational-semantics] for interpreting types as their set of values.
+- The vision of [RustBelt] where unsafe escapes the syntactic type system but is still captured
+  within the semantic type system.
+- My [thesis] for considering all the typing (in particular the environment) as part of the
+  semantics for subtyping. This is why we can talk about the execution environment in type
+  interpretations: we are actually interpreting the whole typing, not just the type. This is only
+  done for functional programming languages and would need to be adapted for imperative ones.
 
 ## Breaking the dependency
 
@@ -35,3 +41,5 @@ one element to the other.
 [curry-howard]: https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence
 [denotational-semantics]: https://en.wikipedia.org/wiki/Denotational_semantics
 [dependent-type]: https://en.wikipedia.org/wiki/Dependent_type
+[RustBelt]: https://plv.mpi-sws.org/rustbelt/
+[thesis]: https://theses.hal.science/tel-00940511

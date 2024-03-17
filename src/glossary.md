@@ -4,6 +4,7 @@
 - [associated proof][unsafe-traits]: An associated constant of the proof type.
 - [bottom type][validity]: The type with an empty interpretation.
 - [permissions to use][properties]: Characteristic of a robust type.
+- [promised type][mutable-references]: The type at the end of a borrow of a mutable reference.
 - [restrictions to use][properties]: Characteristic of an unsafe type.
 - [robust type][properties]: An anonymous type missing some safe values.
 - [safe type][properties]: A Rust type (its interpretation is exactly the safe values).
@@ -25,3 +26,4 @@
 [unsafe-traits]: unsafe-traits.md
 [validity]: what-is-unsafe.md#validity
 [variance]: what-are-types.md#variance
+[mutable-references]: mutable-references.md

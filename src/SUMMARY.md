@@ -5,6 +5,7 @@
 # The mental model
 
 - [What are types?](what-are-types.md)
+- [Mutable references](mutable-references.md)
 - [What is unsafe?](what-is-unsafe.md)
 - [Making it explicit](making-it-explicit.md)
 

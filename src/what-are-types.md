@@ -80,16 +80,9 @@ can use its result where an expression of type `S` is expected as long as `R <: 
 have `fn(P) -> R <: fn(Q) -> S` thus the function also has the type `fn(Q) -> S`.
 
 A less-known (and possibly controversial) example is the mutable reference type `&mut T`. It is
-co-variant in `T` at the current program point and contra-variant in `T` at the end of the borrow.
-This may look confusing because the type `T` appears only once in `&mut T`. Ideally, this type
-should be written `&mut [T .. S]` to emphasize that the current co-variant type `T` and the final
-contra-variant type `S` are different, where `[T .. S]` represents the lifetime of the borrow. When
-those 2 types are conflated (like usually done), it makes the type invariant. However, being able to
-dissociate those 2 types is important to understand unsafe. Another way to look at this, is that a
-mutable reference is made of 2 things:
-- A pointer to a temporarily owned value of type `T`.
-- A function taking the same pointer but with type `S`. This function is automatically called when
-  the borrow ends to return the ownership of the value to the lender.
+usually assumed to be invariant in `T`. In reality, there are 2 separate occurrences of `T` in `&mut
+T`, one of them being co-variant and the other contra-variant. This is discussed in the next
+chapter.
 
 [^goal]: Type systems may also be used to decide other properties (like termination) or to generate
     parts of the program. Those alternative roles are not relevant for unsafe and will be ignored.

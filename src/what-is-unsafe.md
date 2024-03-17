@@ -1,6 +1,6 @@
 # What is unsafe?
 
-This chapter provides the mental model of unsafe, relying on the concepts of the previous chapter.
+This chapter provides the mental model of unsafe, relying on the concepts of the previous chapters.
 
 ## Anonymous types
 
@@ -52,9 +52,8 @@ is robust. This is the most common case, because `P` has permissions to use that
 would otherwise not have. And by co-variance, it is unsafe if `R` is unsafe. This is less common,
 but happens when `R` has restrictions to use, like `Pin::get_unchecked_mut() -> &mut T`.
 
-Similarly for the mutable reference type `&mut T`, which I'll write `&mut [T .. S]` for clarity (see
-the last paragraph of the previous chapter if this is unclear). By contra-variance, it is unsafe if
-`S` is robust. This is the case with the result type of `String::as_mut_vec() -> &mut Vec<u8>` that
+Similarly for the mutable reference type `&mut [T .. S]`. By contra-variance, it is unsafe if `S` is
+robust. This is the case with the result type of `String::as_mut_vec() -> &mut Vec<u8>` that
 requires permissions to use `S` as UTF-8 (removing the safe values of `Vec<u8>` that are not UTF-8).
 By co-variance, it is unsafe if `T` is unsafe. This is the case with the result type of
 `Pin::get_unchecked_mut() -> &mut T` that enforces restrictions to use `T` as possibly pinned

@@ -3,7 +3,8 @@
 The mutable reference type in the mental model is written `&mut [T .. S]`. It means that you have a
 pointer with (temporary) exclusive access to a value of type `T`, and that you promise that the
 value will be of type `S` when the borrow ends. The syntax `[T .. S]` represents the type of the
-value going from `T` to `S` over the lifetime of the borrow.
+value going from `T` to `S` over the lifetime of the borrow. We'll call `T` the type of the mutable
+reference and `S` the _promised type_ of the mutable reference.
 
 Another way to look at this, is that a mutable reference is made of 2 things:
 - A pointer to a temporarily owned value of type `T`.

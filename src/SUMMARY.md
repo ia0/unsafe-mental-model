@@ -15,6 +15,7 @@
 - [Unsafe functions](unsafe-functions.md)
 - [Unsafe traits](unsafe-traits.md)
 - [Unsafe implementations](unsafe-implementations.md)
+- [Navigating Pin](navigating-pin.md)
 
 # What unsafe constructs are missing
 

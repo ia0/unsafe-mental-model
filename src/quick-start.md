@@ -46,13 +46,18 @@ skip any line you don't understand:
 unsafe fn get_unchecked(xs: &[u8], i: Update<P, usize>) -> &u8;
 ```
 
-The type `Update<P, usize>` contains all valid integers of type `usize` smaller than `xs.len()`.
-Because it is at least missing `usize::MAX` from the safety invariant of `usize`, it is a robust
-type.
+The type `Update<P, usize>` contains all valid integers of type `usize` smaller than `xs.len()`. It
+is quite subtle, but notice how the definition of `P` mentions `xs.len()`. To be more precise, `P`
+is the set of execution states where `i < xs.len()`. It is attached to `i` because it must hold when
+`i` is passed as argument. It's a contract between the caller and the callee.
 
-Note that it is also a subtype of the validity invariant of `usize` (because it's the same as its
-safety invariant) and thus doesn't break compilation. We won't check this in the future because it's
-not interesting.
+Using arithmetic, we can show that `Update<P, usize>` is at least missing `usize::MAX` from the
+safety invariant of `usize`. Because `usize \ P` is not empty (it contains `usize::MAX`), the type
+`Update<P, usize>` is a robust type.
+
+Note that `Update<P, usize>` is also a subtype of the validity invariant of `usize` (because it's
+the same as its safety invariant) and thus doesn't break compilation. We won't check this in the
+future because it's not interesting.
 
 Now we can lift the update type through the function type and get something like this:
 
@@ -74,7 +79,7 @@ values `i` smaller than `xs.len()`. There are a few things to say:
   due to variance. It was in a contra-variant position.
 - We may wonder what those additional unsafe values are. One of them is actually the implementation
   of `get_unchecked`: a function that would do an out-of-bound access if it were provided a safe
-  value at `usize` but unsafe at `Update<P, usize>`.
+  (more precisely valid) value at `usize` but unsafe at `Update<P, usize>`.
 
 So to sum up this first example, `get_unchecked` is unsafe because `Update<P, usize>` is robust and
 in a contra-variant position.

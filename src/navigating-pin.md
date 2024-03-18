@@ -7,8 +7,14 @@ a practical example.
 
 ## What is Pin?
 
-The type `Pin<T>` is a name for `Update<P, T>`[^framework] where `P` describes what pinned values of
-type `T` are.
+The author believes that Pin is just a set of guidelines to design a pinned typestate. The type
+itself doesn't need to be used. One could implement their own typestates PinFooRef, PinFooMut, and
+PinFooBox without using Pin. However using the Pin type directly reduces the cognitive load for
+users of the API, as they can reuse their knowledge about Pin instead of learning something new.
+
+The type `Pin<T>` is a name for `Update<P, T>` where `P` describes what pinned values of type `T`
+are. In particular, `P` is specific to `T`. Different types `T` will have different predicates `P`
+to describe their pinned values.
 
 ```rust
 /// Updates the safety invariant of T to contain pinned values.
@@ -127,9 +133,5 @@ To be done (see <https://github.com/ia0/unsafe-mental-model/issues/2>).
 [^safe-subtype-pin]: Definition 3b of
     <https://www.ralfj.de/blog/2018/04/05/a-formal-look-at-pinning.html> requires this subtyping
     relation to hold.
-[^framework]: The author believes that Pin is just a framework to help design a pinned typestate,
-    but doesn't need to be used. One could implement their own typestates without using Pin. However
-    using this framework reduces the cognitive load for users of the API, as they can reuse their
-    knowledge about Pin instead of learning something new.
 
 [pin-type]: https://doc.rust-lang.org/std/pin/struct.Pin.html

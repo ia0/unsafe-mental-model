@@ -9,33 +9,34 @@ chapter. It doesn't contain any information that is not already present in the r
 The mental model relies on the following concepts. You don't need to understand all of them. They
 are quite complicated. But knowing they exist is already a first step. You can just read through and
 skip any line you don't understand:
-- There is a notion of semantic types. A semantic type is a set of execution states.
-- Semantic types define a contract between 2 parts of a program: the one "before" and the one
+- There is a notion of **semantic types**. A semantic type is a set of execution states.
+- Semantic types define a **contract** between 2 parts of a program: the one "before" and the one
   "after". The contract is that the part "before" produces at most the execution states of the type
   and that the part "after" must consume at least the execution states of the type.
-- This notion of contract is closely related to the notion of subtyping. A semantic type is a
+- This notion of contract is closely related to the notion of **subtyping**. A semantic type is a
   subtype of another if its set of execution states is included in those of the other type.
-- Variance is how functions over semantic types (a function that takes one or more semantic types
-  and returns a semantic type) influence subtyping. Co-variance preserves subtyping from the
+- **Variance** is how functions over semantic types (a function that takes one or more semantic
+  types and returns a semantic type) influence subtyping. Co-variance preserves subtyping from the
   parameter to the result. Contra-variance inverses that subtyping. When subtyping on parameters
   doesn't result in a subtyping on the results, the function is invariant.
-- Syntactical types map to semantic types by their safety invariant.
-- Syntactical types also have a notion of validity invariant. The safety invariant is always a
+- Syntactical types map to semantic types by their **safety invariant**.
+- Syntactical types also have a notion of **validity invariant**. The safety invariant is always a
   subtype of the validity invariant. Soundness relies on the safety invariant while compilation
   relies on the validity invariant.
-- It is possible to overwrite the semantic type of a syntactical type with `Update<P, T>` where `T`
-  is the syntactical type and `P` is the semantic type. To avoid breaking compilation, `P` must be a
-  subtype of the validity invariant. The type `P` is usually described in documentation.
-- The update type `Update<P, T>` is unsafe if `P \ T` is not empty. And it is robust if `T \ P` is
-  not empty.
-- The update type can be lifted through syntactical types: `Foo<Update<P, T>>` is the same as
-  `Update<Foo<P>, Foo<T>>` where `Foo<P>` is the semantic type defined by `Foo`.
-- The notion of unsafe types and robust types follows variance through lifting.
-- Functions `fn(P) -> R` are contra-variant in `P` and co-variant in `R`.
-- Mutable references have actually 2 semantic types with the same validity invariant. We write them
-  `&mut [T .. S]` where `T` is the current type and `S` is the promised type at the end of the
+- It is possible to overwrite the semantic type of a syntactical type with the **update type**
+  `Update<P, T>` where `T` is the syntactical type and `P` is the semantic type. To avoid breaking
+  compilation, `P` must be a subtype of the validity invariant. The type `P` is usually described in
+  documentation.
+- The update type `Update<P, T>` is **unsafe** if `P \ T` is not empty. And it is **robust** if `T \
+  P` is not empty.
+- The update type can be **lifted** through syntactical types: `Foo<Update<P, T>>` is the same as
+  `Update<Foo<P>, Foo<T>>` where `Foo<P>` is the semantic type defined by `Foo`. The notion of
+  unsafe types and robust types follows variance through lifting.
+- **Functions** `fn(P) -> R` are contra-variant in `P` and co-variant in `R`.
+- **Mutable references** have actually 2 semantic types with the same validity invariant. We write
+  them `&mut [T .. S]` where `T` is the current type and `S` is the promised type at the end of the
   borrow. It is co-variant in `T` and contra-variant in `S`.
-- Unsafe is when a contract does not hold and needs manual fixing.
+- **Unsafe** is when a contract does not hold and needs manual fixing.
 
 ## Examples
 
@@ -81,5 +82,34 @@ values `i` smaller than `xs.len()`. There are a few things to say:
   of `get_unchecked`: a function that would do an out-of-bound access if it were provided a safe
   (more precisely valid) value at `usize` but unsafe at `Update<P, usize>`.
 
-So to sum up this first example, `get_unchecked` is unsafe because `Update<P, usize>` is robust and
-in a contra-variant position.
+Now that we've looked at the type of `get_unchecked`, let's look at a call site (the function
+definition is not interesting).
+
+```rust
+// SAFETY: 3 is smaller than 11 which is b"hello world".len()
+get_unchecked(b"hello world", unsafe { 3 })
+```
+
+By typing we have `3: usize` and we need `3: Update<P, usize>` to call the function. Because `usize`
+is not a subtype of `Update<P, usize>` (it's actually the contrary), this cast is unsafe and
+requires a manual proof. The manual proof refines the type of `3` from `usize` to `Update<P, usize>`
+by looking at the actual execution states and making sure they are all within `Update<P, usize>`. In
+this case, the value is always 3 and the value of `b"hello world".len()` is always 11, so the proof
+is rather simple.
+
+Note that in practice, update types are usually lifted to function types. We could think that
+instead of casting `3` we could cast `get_unchecked` like that:
+
+```rust
+// SAFETY: 3 is smaller than 11 which is b"hello world".len()
+unsafe { get_unchecked }(b"hello world", 3)
+```
+
+But we cannot cast `get_unchecked` back to `fn(&[u8], usize) -> &u8` because `get_unchecked` is
+actually not a member of that type. The only solution is to attach the proof to the call-site itself
+where the arguments are accessible.
+
+```rust
+// SAFETY: 3 is smaller than 11 which is b"hello world".len()
+unsafe { get_unchecked(b"hello world", 3) }
+```

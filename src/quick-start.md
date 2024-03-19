@@ -3,40 +3,52 @@
 This chapter provides an overview of the mental model with practical examples, to let you quickly
 decide if the book is for you or not. If you plan to read the book regardless, you can skip this
 chapter. It doesn't contain any information that is not already present in the rest of the book.
+However, you may come back to it later for a quick refresher.
 
 ## Concepts
 
-The mental model relies on the following concepts. You don't need to understand all of them. They
-are quite complicated. But knowing they exist is already a first step. You can just read through and
-skip any line you don't understand:
-- There is a notion of **semantic types**. A semantic type is a set of execution states.
-- Semantic types define a **contract** between 2 parts of a program: the one "before" and the one
-  "after". The contract is that the part "before" produces at most the execution states of the type
-  and that the part "after" must consume at least the execution states of the type.
+The mental model relies on the following concepts. You don't need to understand ~~all of them~~ any
+of them. They are quite complicated. But knowing they exist is already a first step. You can just
+read through and skip anything you don't understand on first read:
+- There is a notion of **semantic types**. A semantic type is a set of execution states (this set
+  must satisfy some properties that we won't detail).
+- Semantic types define a **contract** between parts of a program: the **producers** and the
+  **consumers**. The contract is that, the producers must produce at most the execution states of
+  the type, and the consumers must be able to consume at least the execution states of the type.
 - This notion of contract is closely related to the notion of **subtyping**. A semantic type is a
-  subtype of another if its set of execution states is included in those of the other type.
+  subtype of another if its set of execution states is included in those of the other type. In
+  particular, a contract holds if the producers are a subtype of the consumers (the actual type
+  being a witness somewhere in between).
 - **Variance** is how functions over semantic types (a function that takes one or more semantic
-  types and returns a semantic type) influence subtyping. Co-variance preserves subtyping from the
-  parameter to the result. Contra-variance inverses that subtyping. When subtyping on parameters
-  doesn't result in a subtyping on the results, the function is invariant.
-- Syntactical types map to semantic types by their **safety invariant**.
-- Syntactical types also have a notion of **validity invariant**. The safety invariant is always a
-  subtype of the validity invariant. Soundness relies on the safety invariant while compilation
-  relies on the validity invariant.
-- It is possible to overwrite the semantic type of a syntactical type with the **update type**
-  `Update<P, T>` where `T` is the syntactical type and `P` is the semantic type. To avoid breaking
-  compilation, `P` must be a subtype of the validity invariant. The type `P` is usually described in
+  types and returns a semantic type) influence subtyping (or equivalently the roles of producers and
+  consumers). Co-variance preserves subtyping from the result to the parameter. Contra-variance
+  inverses that subtyping (producers of the result become consumers of the parameter, and
+  symmetrically consumers of the result become producers of the parameter). In-variance ignores that
+  subtyping and requires the parameter to be the same (producers of the result become both producers
+  and consumers of the parameter, and similarly for consumers of the result).
+- Syntactical types map to semantic types by their **safety invariant** and are thus a subset of
+  semantic types. So we'll just say **types** to mean semantic types and explicitly say
+  _syntactical_ otherwise.
+- Syntactical types also have a notion of **validity invariant** representing how they get compiled.
+  The safety invariant is always a subtype of the validity invariant. Soundness relies on the safety
+  invariant while compilation relies on the validity invariant.
+- The **update type** `Update<P, T>` updates the safety invariant of a syntactical type `T` with a
+  type `P`. The validity invariant is preserved, thus `P` must be a subtype of that validity
+  invariant. In practice, the type `P` is almost never syntactical and thus described in
   documentation.
-- The update type `Update<P, T>` is **unsafe** if `P \ T` is not empty. And it is **robust** if `T \
+- The update type `Update<P, T>` is **unsafe** if `P \ T` is not empty, and it is **robust** if `T \
   P` is not empty.
 - The update type can be **lifted** through syntactical types: `Foo<Update<P, T>>` is the same as
-  `Update<Foo<P>, Foo<T>>` where `Foo<P>` is the semantic type defined by `Foo`. The notion of
-  unsafe types and robust types follows variance through lifting.
-- **Functions** `fn(P) -> R` are contra-variant in `P` and co-variant in `R`.
-- **Mutable references** have actually 2 semantic types with the same validity invariant. We write
-  them `&mut [T .. S]` where `T` is the current type and `S` is the promised type at the end of the
-  borrow. It is co-variant in `T` and contra-variant in `S`.
-- **Unsafe** is when a contract does not hold and needs manual fixing.
+  `Update<Foo<P>, Foo<T>>`. The notions of unsafe types and robust types follow variance through
+  lifting.
+- **Functions** `fn(P) -> R` are contra-variant in `P` (they consume it) and co-variant in `R` (they
+  produce it).
+- **Mutable references** have actually 2 types with the same validity invariant. We write them `&mut
+  [T .. S]` where `T` is the current type and `S` is the promised type at the end of the borrow.
+  They are co-variant in `T` (they produce it) and contra-variant in `S` (they consume it).
+- **Unsafe** is when a contract does not hold: a value of type `T` is expected to have type `S` but
+  `T` is not a subtype of `S`. In that case, a manual proof that the value is actually of type `S`
+  is needed to restore soundness.
 
 ## Examples
 
@@ -50,7 +62,8 @@ unsafe fn get_unchecked(xs: &[u8], i: Update<P, usize>) -> &u8;
 The type `Update<P, usize>` contains all valid integers of type `usize` smaller than `xs.len()`. It
 is quite subtle, but notice how the definition of `P` mentions `xs.len()`. To be more precise, `P`
 is the set of execution states where `i < xs.len()`. It is attached to `i` because it must hold when
-`i` is passed as argument. It's a contract between the caller and the callee.
+`i` is passed as argument. It's a contract between the caller (producer of `i`) and the callee
+(consumer of `i`).
 
 Using arithmetic, we can show that `Update<P, usize>` is at least missing `usize::MAX` from the
 safety invariant of `usize`. Because `usize \ P` is not empty (it contains `usize::MAX`), the type
@@ -113,3 +126,65 @@ where the arguments are accessible.
 // SAFETY: 3 is smaller than 11 which is b"hello world".len()
 unsafe { get_unchecked(b"hello world", 3) }
 ```
+
+### Box::into_raw()
+
+```rust
+/// Robustness: P is the set of non-null pointers
+robust fn into_raw(b: Box<T>) -> Update<P, *mut T>;
+```
+
+The type `Update<P, *mut T>` contains all valid (in the sense of the validity invariant, not in the
+sense of valid for read or write) pointers of type `*mut T` that are non-null. By definition, this
+type is missing `null_mut()` from the safety invariant of `*mut T`. It is thus a robust type.
+
+We can lift the update type through the function type and get:
+
+```rust
+/// Robustness: P is the set of non-null pointers
+into_raw: Update<fn(Box<T>) -> P, fn(Box<T>) -> *mut T>;
+```
+
+This type is missing some functions that are safe at `fn(Box<T>) -> *mut T`, in particular those
+that return a null pointer. So this type is also robust. This is why the function is annotated
+`robust fn` and documented with a `Robustness` section. The fact that lifting the update type
+preserved its robustness, is due to variance. It was in a co-variant position.
+
+Let's look at the function definition first (and call-sites later).
+
+```rust
+/// Robustness: P is the set of non-null pointers
+robust fn into_raw(b: Box<T>) -> Update<P, *mut T> {
+    let result: *mut T = [...];
+    // SAFETY: The box pointer is non-null by invariant of Box.
+    result
+}
+```
+
+By typing we have `result: *mut T` and we need `result: Update<P, *mut T>` to return from the
+function. Because `*mut T` is not a subtype of `Update<P, *mut T>` (it's actually the contrary),
+this cast is unsafe and requires a manual proof. The manual proof refines the type of `result` from
+`*mut T` to `Update<P, *mut T>` by looking at the actual execution states and making sure they are
+all within `Update<P, *mut T>`. In this case, `Box<T>` has an internal invariant that the pointer is
+non-null, so the proof simply states this invariant.
+
+Let's now look at a call-site.
+
+```rust
+let p: *mut T = Box::into_raw(b);
+// SAFETY: The pointer was not modified since it was returned by Box::into_raw
+// which ensures it is non-null by robustness. So it is still non-null.
+unsafe { NonNull::new_unchecked(p) }
+```
+
+First, values may be implicitly cast by subtyping. This is what happens between the result of
+`Box::into_raw(b)` of type `Update<P, *mut T>` and the binding type of `p` which is `*mut T`,
+because `Update<P, *mut T>` is a subtype of `*mut T`. In particular, `Update<P, *mut T>` is not an
+unsafe type, it is only a robust type. And update types that are not unsafe can safely cast to the
+type they update (without an unsafe block and a safety comment).
+
+The more interesting fact is how we can transfer the information about execution states after
+`Box::into_raw()` returns to the unsafe cast even though we lost the type information. We need to
+verify that all execution operations since the last known states produce execution states that match
+the contract we need to prove. This is trivially the case here because the result value is not
+modified.

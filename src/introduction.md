@@ -11,6 +11,7 @@ This book might be for you if:
 - You prefer learning a few general concepts from which many facts can be deduced, rather than
   learning those many facts directly.
 - You just care about informal intuition rather than a formal description[^formal].
+- You prefer reading and writing Rust than English (Rust is somehow more formal than English).
 
 ## Non-goals
 

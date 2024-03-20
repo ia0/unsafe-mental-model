@@ -26,9 +26,9 @@ read through and skip anything you don't understand on first read:
   symmetrically consumers of the result become producers of the parameter). In-variance ignores that
   subtyping and requires the parameter to be the same (producers of the result become both producers
   and consumers of the parameter, and similarly for consumers of the result).
-- Syntactical types map to semantic types by their **safety invariant** and are thus a subset of
-  semantic types. So we'll just say **types** to mean semantic types and explicitly say
-  _syntactical_ otherwise.
+- Syntactical types map to semantic types (or functions over semantic types) by their **safety
+  invariant** and are thus a subset of semantic types. So we'll just say **types** to mean semantic
+  types and explicitly say _syntactical_ otherwise.
 - Syntactical types also have a notion of **validity invariant** representing how they get compiled.
   The safety invariant is always a subtype of the validity invariant. Soundness relies on the safety
   invariant while compilation relies on the validity invariant.
@@ -39,8 +39,8 @@ read through and skip anything you don't understand on first read:
 - The update type `Update<P, T>` is **unsafe** if `P \ T` is not empty, and it is **robust** if `T \
   P` is not empty.
 - The update type can be **lifted** through syntactical types: `Foo<Update<P, T>>` is the same as
-  `Update<Foo<P>, Foo<T>>`. The notions of unsafe types and robust types follow variance through
-  lifting.
+  `Update<Foo<P>, Foo<T>>` by definition. The notions of unsafe types and robust types follow
+  variance through lifting.
 - **Functions** `fn(P) -> R` are contra-variant in `P` (they consume it) and co-variant in `R` (they
   produce it).
 - **Mutable references** have actually 2 types with the same validity invariant. We write them `&mut
@@ -131,7 +131,7 @@ unsafe { get_unchecked(b"hello world", 3) }
 
 ```rust
 /// Robustness: P is the set of non-null pointers
-robust fn into_raw(b: Box<T>) -> Update<P, *mut T>;
+robust fn into_raw<T>(b: Box<T>) -> Update<P, *mut T>;
 ```
 
 The type `Update<P, *mut T>` contains all valid (in the sense of the validity invariant, not in the
@@ -142,11 +142,11 @@ We can lift the update type through the function type and get:
 
 ```rust
 /// Robustness: P is the set of non-null pointers
-into_raw: Update<fn(Box<T>) -> P, fn(Box<T>) -> *mut T>;
+into_raw: for<T> Update<fn(Box<T>) -> P, fn(Box<T>) -> *mut T>;
 ```
 
-This type is missing some functions that are safe at `fn(Box<T>) -> *mut T`, in particular those
-that return a null pointer. So this type is also robust. This is why the function is annotated
+This type is missing some functions that are safe at `for<T> fn(Box<T>) -> *mut T`, in particular
+those that return a null pointer. So this type is also robust. This is why the function is annotated
 `robust fn` and documented with a `Robustness` section. The fact that lifting the update type
 preserved its robustness, is due to variance. It was in a co-variant position.
 
@@ -154,7 +154,7 @@ Let's look at the function definition first (and call-sites later).
 
 ```rust
 /// Robustness: P is the set of non-null pointers
-robust fn into_raw(b: Box<T>) -> Update<P, *mut T> {
+robust fn into_raw<T>(b: Box<T>) -> Update<P, *mut T> {
     let result: *mut T = [...];
     // SAFETY: The box pointer is non-null by invariant of Box.
     result
@@ -188,3 +188,26 @@ The more interesting fact is how we can transfer the information about execution
 verify that all execution operations since the last known states produce execution states that match
 the contract we need to prove. This is trivially the case here because the result value is not
 modified.
+
+In practice, the robustness of `Box::into_raw()` is much more precise than just returning a non-null
+pointer.
+
+```rust
+/// Robustness: Q is the set of non-aliased, aligned, allocated, and valid pointers
+robust fn into_raw<T, P>(b: Box<Update<P, T>>) -> Update<Q, *mut Update<P, T>>;
+```
+
+The function is actually polymorphic over the type within the Box, which means it doesn't temper its
+content and simply returns the underlying pointer (theorem for free). This correctness property is
+not part of the safe type `for<T> fn(Box<T>) -> *mut T`, the function could just return any pointer
+(including a null pointer). But updating the parameter and return types we can more precisely
+capture the behavior of the function, which matters when proving unsafe code because of the stronger
+contract.
+
+The type `Q` is actually a filter over `*mut Update<P, T>` and thus more precisely a function over
+types `Q(P)` parametric over `P`. So the result type is actually `Update<Q(P), *mut T>` (the type
+being updated doesn't matter, only its validity invariant does).
+
+Functions in the standard library may usually be assumed to have such strong robustness guarantees,
+in contrary to other libraries for which correctness may not usually be assumed to hold when proving
+unsafe code.

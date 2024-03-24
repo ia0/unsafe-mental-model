@@ -214,17 +214,18 @@ unsafe code.
 ### String::as_mut_vec()
 
 ```rust
-/// Safety: P is the set of Vec<u8> that are UTF-8
+/// Safety: P is the set of safe Vec<u8> that are UTF-8
 unsafe fn as_mut_vec(self: &mut String) -> &mut [Vec<u8> .. Update<P, Vec<u8>>];
 ```
 
-The type `Update<P, Vec<u8>>` contains all valid values of type `Vec<u8>` that are UTF-8. It is a
-robust type because it is missing values (those that are not UTF-8) that are safe at `Vec<u8>`.
+The type `Update<P, Vec<u8>>` contains all valid values of type `Vec<u8>` that are safe and UTF-8.
+It is a robust type because it is missing values that are safe (those that are not UTF-8) and does
+not contain unsafe values.
 
 We can lift the update type through the mutable reference and get:
 
 ```rust
-/// Safety: P is the set of Vec<u8> that are UTF-8
+/// Safety: P is the set of safe Vec<u8> that are UTF-8
 unsafe fn as_mut_vec(self: &mut String) -> Update<&mut [Vec<u8> .. P], &mut Vec<u8>>;
 ```
 
@@ -242,13 +243,14 @@ Update<fn(&mut String) -> &mut [Vec<u8> .. P], fn(&mut String) -> &mut Vec<u8>>
 ```
 
 This type also has additional values compared to `fn(&mut String) -> &mut Vec<u8>` and is thus
-unsafe. This is because the result of a function is in a co-variant position and the result was
-unsafe. The function type being thus unsafe, it has a `Safety` section and is annotated `unsafe fn`.
+unsafe. This is because the result type of a function is in a co-variant position, and the result
+was unsafe. The function type being thus unsafe, it has a `Safety` section and is annotated `unsafe
+fn`.
 
 Let's look at a call site.
 
 ```rust
-/// SAFETY: At the end of the borrow, the message is pure ASCII, thus UTF-8.
+/// SAFETY: At the end of the borrow, the message is ASCII, thus UTF-8.
 for byte in unsafe { message.as_mut_vec() } {
     *byte &= 0x7f;
 }
@@ -257,15 +259,15 @@ for byte in unsafe { message.as_mut_vec() } {
 By typing we have `message.as_mut_vec()` of type `&mut [Vec<u8> .. Update<P, Vec<u8>>]` and we need
 `&mut Vec<u8>`, i.e. `&mut [Vec<u8> .. Vec<u8>]`. Because this does not hold by subtyping (the
 promised type is robust, making the mutable reference unsafe), we need a manual proof. We must
-refine the promised type from `Vec<u8>` to `Update<P, Vec<u8>>`, i.e. we must prove that the
-promised type is UTF-8. Because we convert all bytes to ASCII before the borrow ends, and don't
-modify the message further, we can claim that the message at the end of the borrow is ASCII and thus
-UTF-8.
+refine the promised type from `Vec<u8>` to `Update<P, Vec<u8>>` by contra-variance of the promised
+type, i.e. we must prove that the promised type is UTF-8. Because we convert all bytes to ASCII
+before the borrow ends, and don't modify the message further, we can claim that the message at the
+end of the borrow is ASCII and thus UTF-8.
 
 In practice, `String::as_mut_vec()` is also robust:
 
 ```rust
-/// Safety and Robustness: P is the set of Vec<u8> that are UTF-8
+/// Safety and Robustness: P is the set of safe Vec<u8> that are UTF-8
 robust unsafe fn as_mut_vec(self: &mut String) -> &mut Update<P, Vec<u8>>;
 ```
 
@@ -278,7 +280,7 @@ robust function type.
 ```rust
 /// SAFETY: Assuming the message is UTF-8 at the beginning of the borrow, it is still
 /// UTF-8 at the end of the borrow.
-for bytes in unsafe { message.as_mut_vec() }.chunks_mut(2) {
+for bytes in unsafe { message.as_mut_vec() }.chunks_exact_mut(2) {
     // Convert code points encoded with 2 bytes at even offsets to ASCII.
     if bytes[0] & 0xe0 == 0xc0 {
         bytes[0] &= 0x3f;
@@ -294,8 +296,8 @@ contains 2 types because it's a mutable reference):
 ```rust
 /// Safety and Robustness: P and Q are sets of valid values of Vec<u8>
 robust unsafe fn as_mut_vec<P, Q>(
-    self: &mut [Update<P, String> .. Update<Q, String>]
-) -> &mut [Update<P, Vec<u8>> .. Update<Q, Vec<u8>>];
+    self: Update<&mut [P .. Q], &mut String>
+) -> Update<&mut [P .. Q], &mut Vec<u8>>;
 ```
 
 The most common case is when the parameter is safe. This means both `P` and `Q` are the safety
@@ -322,3 +324,12 @@ robust fn sanitize(message: &mut [Update<Vec<u8>, String> .. String]) {
     }
 }
 ```
+
+We already discussed the first transformation, so let's focus on the second one. By typing we have
+`message` of type `&mut String` and `message.as_mut_vec()` of type `Update<&mut [ASCII .. String],
+&mut Vec<u8>>`. We need `message` to have type `Update<&mut [ASCII .. String], &mut String>` and
+`message.as_mut_vec()` to have type `&mut Vec<u8>`. Both casts are unsafe because they don't hold by
+subtyping. The first one doesn't hold because we have to prove that `message` is initially ASCII,
+which we know by preceding code. The second one doesn't hold because we have to prove that
+`message.as_mut_vec()` is UTF-8 at the end of the borrow, which we do by using the robustness that
+it is initially ASCII and preserving this property to the end of the borrow.

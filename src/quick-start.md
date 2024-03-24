@@ -10,8 +10,7 @@ However, you may come back to it later for a quick refresher.
 The mental model relies on the following concepts. You don't need to understand ~~all of them~~ any
 of them. They are quite complicated. But knowing they exist is already a first step. You can just
 read through and skip anything you don't understand on first read:
-- There is a notion of **semantic types**. A semantic type is a set of execution states (this set
-  must satisfy some properties that we won't detail).
+- There is a notion of **semantic types**. A semantic type is a set of execution states.
 - Semantic types define a **contract** between parts of a program: the **producers** and the
   **consumers**. The contract is that, the producers must produce at most the execution states of
   the type, and the consumers must be able to consume at least the execution states of the type.

@@ -22,6 +22,8 @@ The mental model is inspired by the following concepts:
   type interpretations: we are actually interpreting the whole typing, not just the type. This is
   only done for functional programming languages and would need to be adapted for imperative ones.
 - [RustHornBelt] for the idea of prophecies to explain the promised type of mutable references.
+- Refinement types which the update type is similar to. The main difference is that the update
+  refines the validity invariant, not the type itself.
 
 ## Breaking the dependency
 

@@ -26,6 +26,7 @@
 
 # Missing unsafe language constructs
 
+- [The update type](update-type.md)
 - [The robust keyword](robust-keyword.md)
 - [Proof fields](proof-fields.md)
 

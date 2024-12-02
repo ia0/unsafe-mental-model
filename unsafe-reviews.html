@@ -1,0 +1,263 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Unsafe reviews - Mental model for unsafe in Rust</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Mental model for unsafe in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ia0/unsafe-mental-model" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/ia0/unsafe-mental-model/edit/main/src/unsafe-reviews.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="unsafe-reviews"><a class="header" href="#unsafe-reviews">Unsafe reviews</a></h1>
+<p>Unsafe reviews is the process of reviewing unsafe code for soundness. For those reviews to be
+sustainable on code change, it is important to not trigger a review too often while still triggering
+each time it is needed. The current approach is to trigger a review when a file containing the
+unsafe keyword is modified. This is a good approximation in the sense that if files with the unsafe
+keyword are kept small then reviews won't trigger too often. However, it may also miss some reviews
+when unsafe code relies on properties outside files with the unsafe keyword (like robust
+implementations).</p>
+<h2 id="sound-triggering"><a class="header" href="#sound-triggering">Sound triggering</a></h2>
+<p>If the robust keyword existed, unsafe reviews could trigger on files containing any of those 2
+keywords. By making sure during unsafe review that proofs only rely on documented robust properties
+(parameter of unsafe function or result of robust function), this would make sure that unsafe review
+will trigger each time it is needed.</p>
+<p>Here are some examples of proofs that depended on undocumented or incorrect robustness:</p>
+<ul>
+<li><a href="https://github.com/rust-lang/regex/pull/1154">https://github.com/rust-lang/regex/pull/1154</a></li>
+<li><a href="https://github.com/rust-lang/rust/issues/80335">https://github.com/rust-lang/rust/issues/80335</a></li>
+<li><a href="https://rustsec.org/advisories/RUSTSEC-2024-0019.html">https://rustsec.org/advisories/RUSTSEC-2024-0019.html</a></li>
+</ul>
+<h2 id="burden-of-proof"><a class="header" href="#burden-of-proof">Burden of proof</a></h2>
+<p>To avoid increasing the burden of unsafe reviews, it is important that items are not documented as
+robust unless it is known that a proof relies on them. To ensure this, robust items should also
+document in their robustness section which crates rely on their robustness. This could alternatively
+be tracked in a separate global tool like <a href="https://github.com/mozilla/cargo-vet"><code>cargo-vet</code></a>.</p>
+<p>For example, one should not implement <a href="https://doc.rust-lang.org/std/iter/trait.TrustedLen.html"><code>TrustedLen</code></a> unless it is relied upon somewhere.
+This is deliberately a borderline example to show that it is actually a trade-off between increasing
+the burden of proof and implementing possibly useful functionalities.</p>
+<h2 id="recommended-lints"><a class="header" href="#recommended-lints">Recommended lints</a></h2>
+<p>It is almost obligatory to enable <a href="https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html#unsafe-op-in-unsafe-fn">unsafe-op-in-unsafe-fn</a> which is allowed-by-default up to edition
+2021 and warn-by-default starting from edition 2024. Not using this lint will:</p>
+<ul>
+<li>give you a wrong mental model conflating unsafe in types (properties) and unsafe in code (proofs)
+as described in the <a href="https://rust-lang.github.io/rfcs/2585-unsafe-block-in-unsafe-fn.html">RFC</a>,</li>
+<li>conflict with undocumented-unsafe-blocks described below,</li>
+<li>conflict with multiple-unsafe-ops-per-block described below.</li>
+</ul>
+<p>The following lints will help unsafe review further:</p>
+<ul>
+<li><a href="https://rust-lang.github.io/rust-clippy/master/index.html#/undocumented_unsafe_blocks">undocumented-unsafe-blocks</a> is the most important one. Without it, unsafe reviewers have to
+reverse the invariants by reading all the code. Anything non-local should be avoided during
+reviews.</li>
+<li><a href="https://rust-lang.github.io/rust-clippy/master/index.html#/multiple_unsafe_ops_per_block">multiple-unsafe-ops-per-block</a> is related but secondary. Without it, the safety comment may
+either (best case scenario) be proving multiple unsafe superpowers being used at the same time
+resulting in possible confusion, or (worst case scenario) forgetting to prove one of the unsafe
+superpowers being used resulting in the same issue as if undocumented-unsafe-blocks was not
+enabled.</li>
+</ul>
+<p>Finally, <a href="https://doc.rust-lang.org/rustc/lints/listing/warn-by-default.html#unused-unsafe">unused-unsafe</a> (which is warn-by-default) is the other side of
+multiple-unsafe-ops-per-block. Both together ensure that there is a one-to-one correspondence
+between the usage of unsafe superpower and the safety comment proving its soundness, thus
+simplifying unsafe reviews.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="proof-fields.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="type-theory.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="proof-fields.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="type-theory.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

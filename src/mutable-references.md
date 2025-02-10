@@ -15,6 +15,10 @@ Yet another way to look at this, is that mutable references are like reversed fu
 - Functions `fn(P) -> R` ask for a value of type `P` then give back a value of type `R`.
 - Mutable references `&mut [T .. S]` give a value of type `T` then ask it back at type `S`.
 
+This is the same concept as the [strong
+references](https://flux-rs.github.io/flux/blog/02-ownership.html#borrowing-strong-references) in
+[Flux](https://github.com/flux-rs/flux).
+
 ## Variance
 
 The mutable reference type `&mut [T .. S]` is co-variant in `T` and contra-variant in `S`. When

@@ -21,6 +21,19 @@ This book does not try to:
 - Introduce new unsafe constructs in Rust (only raise awareness of their absence).
 - Formalize unsafe and therefore Rust's type system.
 
+## Limitations
+
+This book has limited usage for a few reasons:
+- If you care about correctness as much as soundness, then it is unnecessary and redundant to prove
+  soundness, since correctness implies soundness. A similar (and simpler) mental model works for
+  correctness, without the concepts of `unsafe` and `robust`.
+- The mental model reduces the scope of unsafe to the expression level. This might be too granular
+  for practical purposes (which is why it's a mental model and not a formal tool). Most often, being
+  modular at function level is enough, in which case the more usual `requires` and `ensures`
+  contract style is enough. (Note that requirements may talk about what happens after the function
+  returns, which is less surprising in the mental model because it follows a type as contract
+  style.)
+
 ## Living document
 
 This book is imperfect. Feel free to [open an issue][new-issue] if something is unclear or wrong.

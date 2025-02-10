@@ -1,0 +1,285 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>What are types? - Mental model for unsafe in Rust</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Mental model for unsafe in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ia0/unsafe-mental-model" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/ia0/unsafe-mental-model/edit/main/src/what-are-types.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="what-are-types"><a class="header" href="#what-are-types">What are types?</a></h1>
+<p>This chapter is an informal (and possibly opinionated) overview of type systems. It is necessary to
+understand this chapter to understand the mental model, because according to the mental model:</p>
+<blockquote>
+<p>Unsafe is a way to escape the type system.</p>
+</blockquote>
+<h2 id="programming-languages"><a class="header" href="#programming-languages">Programming languages</a></h2>
+<p>Programming languages usually provide the following components (there may be variations):</p>
+<ul>
+<li>A syntax to write programs, usually some grammar.</li>
+<li>The meaning of programs, usually some operational semantics (how programs execute).</li>
+</ul>
+<p>The most common and practical meaning of programs is their execution output (effects and/or values),
+which is usually why programs are written and executed. However, for most realistic programming
+languages, not all programs have a meaning. In particular, program execution is not always defined
+(think undefined behavior). <strong>This is the reason why type systems exist.</strong></p>
+<h2 id="type-systems"><a class="header" href="#type-systems">Type systems</a></h2>
+<p>Type systems try to decide whether programs are defined<sup class="footnote-reference"><a href="#goal">1</a></sup> in a mechanized way. They tell
+whether a program is defined without human interaction, but they may need non-interactive human
+assistance in the form of program annotations (see next section).</p>
+<p>Type systems come with a proof of <em>soundness</em>: if the type system says a program is defined then the
+program is defined. However, this classification is an undecidable problem for non-trivial
+languages, which is why type systems may classify a program as possibly undefined although it is
+actually defined. <strong>This is the reason why unsafe exists.</strong></p>
+<p>Unsafe is a way to make the type system agree that a program is defined. This argumentation is done
+informally by a human, and is thus not mechanized. This suddenly introduces the notion of human
+errors. The usage of unsafe may thus break the soundness property of the type system. <strong>This is why
+soundness must be preserved when using unsafe.</strong></p>
+<h2 id="types"><a class="header" href="#types">Types</a></h2>
+<p>Most type systems follow the same techniques. They introduce a notion of types to classify programs.
+Types are an additional syntax (with its own grammar) to annotate programs and their parts (like
+expressions, variables, statements, functions, etc). The type system provides rules on how those
+types combine and interact based on the program structure.</p>
+<p>It is natural to interpret types as sets of <em>values</em> (or more generally mathematical objects
+describing the possible runtime states at a given point in the execution of the program they are
+annotating), called their <em>type interpretation</em> and written <code>|T|</code>. For example, the interpretation
+<code>|i32|</code> of <code>i32</code> could be all the 32-bits integers, and <code>|*const i32|</code> could be all the pointer-wide
+integers with an optional provenance. This interpretation may depend on the execution environment,
+like the memory.</p>
+<p>Types can also be seen as a form of contract between different parts of the program. This is how,
+when all the contracts in a program are satisfied, it is possible to say something about the
+program's behavior. In particular, when the output of one part of a program is the input of another
+part of the program, the type (or contract) at this junction specifies which values are permitted.
+The output program promises to not output values outside the contract, and the input program
+promises to accept all values inside the contract.</p>
+<h2 id="subtyping"><a class="header" href="#subtyping">Subtyping</a></h2>
+<p>Interpreting types as sets of values naturally generates a notion of <em>subtyping</em> through set
+inclusion. A type <code>A</code> is a subtype of <code>B</code>, which we'll write <code>A &lt;: B</code>, if <code>|A|</code> is included in
+<code>|B|</code>. For example, all values of type <code>&amp;'static i32</code> are also values of type <code>&amp;'a i32</code> so <code>&amp;'static i32</code> is a subtype of <code>&amp;'a i32</code>.</p>
+<p>This notion of subtyping can be used to plug parts of a program together even when they don't have
+the same contract. For example, an expression of type <code>T</code> can be used where an expression of type
+<code>S</code> is expected as long as <code>T</code> is a subtype of <code>S</code>. Because subtyping is a reflexive and transitive
+relation, we can always require contracts to match exactly and let the programmer explicitly use
+subtyping to change one or the other to make them match.</p>
+<h2 id="variance"><a class="header" href="#variance">Variance</a></h2>
+<p>The notions of subtyping and type-level functions naturally generate a notion of <em>variance</em> defining
+how <code>Foo&lt;A&gt;</code> and <code>Foo&lt;B&gt;</code> relate when <code>A</code> is a subtype of <code>B</code>:</p>
+<ul>
+<li>If <code>Foo&lt;T&gt;</code> is co-variant in <code>T</code> then <code>Foo&lt;A&gt;</code> is a subtype of <code>Foo&lt;B&gt;</code>.</li>
+<li>If <code>Foo&lt;T&gt;</code> is contra-variant in <code>T</code> then <code>Foo&lt;B&gt;</code> is a subtype of <code>Foo&lt;A&gt;</code>.</li>
+<li>If <code>Foo&lt;T&gt;</code> is invariant in <code>T</code> then there's no particular relation between <code>Foo&lt;A&gt;</code> and <code>Foo&lt;B&gt;</code>.</li>
+</ul>
+<p>A well-known example of variance is the function type <code>fn(P) -&gt; R</code>. It is contra-variant in <code>P</code> and
+co-variant in <code>R</code>. You can call a function with an argument of type <code>Q</code> as long as <code>Q &lt;: P</code>, and you
+can use its result where an expression of type <code>S</code> is expected as long as <code>R &lt;: S</code>. Equivalently, we
+have <code>fn(P) -&gt; R &lt;: fn(Q) -&gt; S</code> thus the function also has the type <code>fn(Q) -&gt; S</code>.</p>
+<p>A less-known (and possibly controversial) example is the mutable reference type <code>&amp;mut T</code>. It is
+usually assumed to be invariant in <code>T</code>. In reality, there are 2 separate occurrences of <code>T</code> in <code>&amp;mut T</code>, one of them being co-variant and the other contra-variant. This is discussed in the next
+chapter.</p>
+<div class="footnote-definition" id="goal"><sup class="footnote-definition-label">1</sup>
+<p>Type systems may also be used to decide other properties (like termination) or to generate
+parts of the program. Those alternative roles are not relevant for unsafe and will be ignored.</p>
+</div>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="quick-start.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="mutable-references.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="quick-start.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="mutable-references.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

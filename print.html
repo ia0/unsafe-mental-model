@@ -1,0 +1,1328 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Mental model for unsafe in Rust</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Mental model for unsafe in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ia0/unsafe-mental-model" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
+<p>This book describes a mental model for unsafe in Rust.</p>
+<h2 id="audience"><a class="header" href="#audience">Audience</a></h2>
+<p>This book might be for you if:</p>
+<ul>
+<li>You want a coherent and future-proof mental model for unsafe (either to review such code or to
+improve its maintenance).</li>
+<li>You don't mind a bit of type theory (also useful outside unsafe).</li>
+<li>You prefer learning a few general concepts from which many facts can be deduced, rather than
+learning those many facts directly.</li>
+<li>You just care about informal intuition rather than a formal description<sup class="footnote-reference"><a href="#formal">1</a></sup>.</li>
+<li>You prefer reading and writing Rust than English (Rust is somehow more formal than English).</li>
+</ul>
+<h2 id="non-goals"><a class="header" href="#non-goals">Non-goals</a></h2>
+<p>This book does not try to:</p>
+<ul>
+<li>Replace existing (and official) documentation regarding unsafe (see <a href="references.html">references</a>).</li>
+<li>Explain what behaviors are undefined or how to write sound unsafe code.</li>
+<li>Introduce new unsafe constructs in Rust (only raise awareness of their absence).</li>
+<li>Formalize unsafe and therefore Rust's type system.</li>
+</ul>
+<h2 id="limitations"><a class="header" href="#limitations">Limitations</a></h2>
+<p>This book has limited usage for a few reasons:</p>
+<ul>
+<li>If you care about correctness as much as soundness, then it is unnecessary and redundant to prove
+soundness, since correctness implies soundness. A similar (and simpler) mental model works for
+correctness, without the concepts of <code>unsafe</code> and <code>robust</code>.</li>
+<li>The mental model reduces the scope of unsafe to the expression level. This might be too granular
+for practical purposes (which is why it's a mental model and not a formal tool). Most often, being
+modular at function level is enough, in which case the more usual <code>requires</code> and <code>ensures</code>
+contract style is enough. (Note that requirements may talk about what happens after the function
+returns, which is less surprising in the mental model because it follows a type as contract
+style.)</li>
+</ul>
+<h2 id="living-document"><a class="header" href="#living-document">Living document</a></h2>
+<p>This book is imperfect. Feel free to <a href="https://github.com/ia0/unsafe-mental-model/issues/new">open an issue</a> if something is unclear or wrong.
+You can also edit the page you are reading with the link in the top right.</p>
+<h2 id="background"><a class="header" href="#background">Background</a></h2>
+<p>An early attempt of this book was made in this <a href="https://gist.github.com/ia0/820ab50d4c5f0f5e3aeb841cef8e6792">gist</a> and discussed in this
+<a href="https://internals.rust-lang.org/t/simpler-mental-model-for-unsafe/20363">thread</a>.</p>
+<div class="footnote-definition" id="formal"><sup class="footnote-definition-label">1</sup>
+<p>The appendix attempts to justify this informal intuition with a more formal description
+(if this is really what you want).</p>
+</div>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="quick-start"><a class="header" href="#quick-start">Quick start</a></h1>
+<p>This chapter provides an overview of the mental model with practical examples, to let you quickly
+decide if the book is for you or not. If you plan to read the book regardless, you can skip this
+chapter. It doesn't contain any information that is not already present in the rest of the book.
+However, you may come back to it later for a quick refresher.</p>
+<h2 id="concepts"><a class="header" href="#concepts">Concepts</a></h2>
+<p>The mental model relies on the following concepts. You don't need to understand <del>all of them</del> any
+of them. They are quite complicated. But knowing they exist is already a first step. You can just
+read through and skip anything you don't understand on first read:</p>
+<ul>
+<li>There is a notion of <strong>semantic types</strong>. A semantic type is a set of execution states.</li>
+<li>Semantic types define a <strong>contract</strong> between parts of a program: the <strong>producers</strong> and the
+<strong>consumers</strong>. The contract is that, the producers must produce at most the execution states of
+the type, and the consumers must be able to consume at least the execution states of the type.</li>
+<li>This notion of contract is closely related to the notion of <strong>subtyping</strong>. A semantic type is a
+subtype of another if its set of execution states is included in those of the other type. In
+particular, a contract holds if the producers are a subtype of the consumers (the actual type
+being a witness somewhere in between).</li>
+<li><strong>Variance</strong> is how functions over semantic types (a function that takes one or more semantic
+types and returns a semantic type) influence subtyping (or equivalently the roles of producers and
+consumers). Co-variance preserves subtyping from the result to the parameter. Contra-variance
+inverses that subtyping (producers of the result become consumers of the parameter, and
+symmetrically consumers of the result become producers of the parameter). In-variance ignores that
+subtyping and requires the parameter to be the same (producers of the result become both producers
+and consumers of the parameter, and similarly for consumers of the result).</li>
+<li>Syntactical types map to semantic types (or functions over semantic types) by their <strong>safety
+invariant</strong> and are thus a subset of semantic types. So we'll just say <strong>types</strong> to mean semantic
+types and explicitly say <em>syntactical</em> otherwise.</li>
+<li>Syntactical types also have a notion of <strong>validity invariant</strong> representing how they get compiled.
+The safety invariant is always a subtype of the validity invariant. Soundness relies on the safety
+invariant while compilation relies on the validity invariant.</li>
+<li>The <strong>update type</strong> <code>Update&lt;P, T&gt;</code> updates the safety invariant of a syntactical type <code>T</code> with a
+type <code>P</code>. The validity invariant is preserved, thus <code>P</code> must be a subtype of that validity
+invariant. In practice, the type <code>P</code> is almost never syntactical and thus described in
+documentation.</li>
+<li>The update type <code>Update&lt;P, T&gt;</code> is <strong>unsafe</strong> if <code>P \ T</code> is not empty, and it is <strong>robust</strong> if <code>T \ P</code> is not empty.</li>
+<li>The update type can be <strong>lifted</strong> through syntactical types: <code>Foo&lt;Update&lt;P, T&gt;&gt;</code> is the same as
+<code>Update&lt;Foo&lt;P&gt;, Foo&lt;T&gt;&gt;</code> by definition. The notions of unsafe types and robust types follow
+variance through lifting.</li>
+<li><strong>Functions</strong> <code>fn(P) -&gt; R</code> are contra-variant in <code>P</code> (they consume it) and co-variant in <code>R</code> (they
+produce it).</li>
+<li><strong>Mutable references</strong> have actually 2 types with the same validity invariant. We write them <code>&amp;mut [T .. S]</code> where <code>T</code> is the current type and <code>S</code> is the promised type at the end of the borrow.
+They are co-variant in <code>T</code> (they produce it) and contra-variant in <code>S</code> (they consume it).</li>
+<li><strong>Unsafe</strong> is when a contract does not hold: a value of type <code>T</code> is expected to have type <code>S</code> but
+<code>T</code> is not a subtype of <code>S</code>. In that case, a manual proof that the value is actually of type <code>S</code>
+is needed to restore soundness.</li>
+</ul>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h3 id="sliceget_unchecked"><a class="header" href="#sliceget_unchecked">slice::get_unchecked()</a></h3>
+<pre><code class="language-rust">/// Safety: P is the set of usize smaller than xs.len()
+unsafe fn get_unchecked(xs: &amp;[u8], i: Update&lt;P, usize&gt;) -&gt; &amp;u8;</code></pre>
+<p>The type <code>Update&lt;P, usize&gt;</code> contains all valid integers of type <code>usize</code> smaller than <code>xs.len()</code>. It
+is quite subtle, but notice how the definition of <code>P</code> mentions <code>xs.len()</code>. To be more precise, <code>P</code>
+is the set of execution states where <code>i &lt; xs.len()</code>. It is attached to <code>i</code> because it must hold when
+<code>i</code> is passed as argument. It's a contract between the caller (producer of <code>i</code>) and the callee
+(consumer of <code>i</code>).</p>
+<p>Using arithmetic, we can show that <code>Update&lt;P, usize&gt;</code> is at least missing <code>usize::MAX</code> from the
+safety invariant of <code>usize</code>. Because <code>usize \ P</code> is not empty (it contains <code>usize::MAX</code>), the type
+<code>Update&lt;P, usize&gt;</code> is a robust type.</p>
+<p>Note that <code>Update&lt;P, usize&gt;</code> is also a subtype of the validity invariant of <code>usize</code> (because it's
+the same as its safety invariant) and thus doesn't break compilation. We won't check this in the
+future because it's not interesting.</p>
+<p>Now we can lift the update type through the function type and get something like this:</p>
+<pre><code class="language-rust">/// Safety: P is the set of usize smaller than xs.len()
+get_unchecked: Update&lt;fn(xs: &amp;[u8], i: P) -&gt; &amp;u8, fn(&amp;[u8], usize) -&gt; &amp;u8&gt;;</code></pre>
+<p>This very long type contains all valid functions of type <code>fn(&amp;[u8], usize) -&gt; &amp;u8</code> that only accept
+values <code>i</code> smaller than <code>xs.len()</code>. There are a few things to say:</p>
+<ul>
+<li>It is important to filter from <em>valid</em> functions and not just <em>safe</em> functions. For <code>usize</code> it
+didn't make a difference because both the safety and validity invariants are the same type. But
+for functions they are actually different. The validity invariant contains many more functions. It
+contains all the unsafe functions in addition to the safe functions that the safety invariant
+contains.</li>
+<li>While in <code>Update&lt;P, usize&gt;</code> we removed some values from the safety invariant, now we are actually
+adding values. This makes the type unsafe, which is why the function is annotated <code>unsafe fn</code> and
+documented with a <code>Safety</code> section. The fact that the update type changed from robust to unsafe is
+due to variance. It was in a contra-variant position.</li>
+<li>We may wonder what those additional unsafe values are. One of them is actually the implementation
+of <code>get_unchecked</code>: a function that would do an out-of-bound access if it were provided a safe
+(more precisely valid) value at <code>usize</code> but unsafe at <code>Update&lt;P, usize&gt;</code>.</li>
+</ul>
+<p>Now that we've looked at the type of <code>get_unchecked</code>, let's look at a call site (the function
+definition is not interesting).</p>
+<pre><code class="language-rust">// SAFETY: 3 is smaller than 11 which is b"hello world".len()
+get_unchecked(b"hello world", unsafe { 3 })</code></pre>
+<p>By typing we have <code>3: usize</code> and we need <code>3: Update&lt;P, usize&gt;</code> to call the function. Because <code>usize</code>
+is not a subtype of <code>Update&lt;P, usize&gt;</code> (it's actually the contrary), this cast is unsafe and
+requires a manual proof. The manual proof refines the type of <code>3</code> from <code>usize</code> to <code>Update&lt;P, usize&gt;</code>
+by looking at the actual execution states and making sure they are all within <code>Update&lt;P, usize&gt;</code>. In
+this case, the value is always 3 and the value of <code>b"hello world".len()</code> is always 11, so the proof
+is rather simple.</p>
+<p>Note that in practice, update types are usually lifted to function types. We could think that
+instead of casting <code>3</code> we could cast <code>get_unchecked</code> like that:</p>
+<pre><code class="language-rust">// SAFETY: 3 is smaller than 11 which is b"hello world".len()
+unsafe { get_unchecked }(b"hello world", 3)</code></pre>
+<p>But we cannot cast <code>get_unchecked</code> back to <code>fn(&amp;[u8], usize) -&gt; &amp;u8</code> because <code>get_unchecked</code> is
+actually not a member of that type. The only solution is to attach the proof to the call-site itself
+where the arguments are accessible.</p>
+<pre><code class="language-rust">// SAFETY: 3 is smaller than 11 which is b"hello world".len()
+unsafe { get_unchecked(b"hello world", 3) }</code></pre>
+<h3 id="boxinto_raw"><a class="header" href="#boxinto_raw">Box::into_raw()</a></h3>
+<pre><code class="language-rust">/// Robustness: P is the set of non-null pointers
+robust fn into_raw&lt;T&gt;(b: Box&lt;T&gt;) -&gt; Update&lt;P, *mut T&gt;;</code></pre>
+<p>The type <code>Update&lt;P, *mut T&gt;</code> contains all valid (in the sense of the validity invariant, not in the
+sense of valid for read or write) pointers of type <code>*mut T</code> that are non-null. By definition, this
+type is missing <code>null_mut()</code> from the safety invariant of <code>*mut T</code>. It is thus a robust type.</p>
+<p>We can lift the update type through the function type and get:</p>
+<pre><code class="language-rust">/// Robustness: P is the set of non-null pointers
+into_raw: for&lt;T&gt; Update&lt;fn(Box&lt;T&gt;) -&gt; P, fn(Box&lt;T&gt;) -&gt; *mut T&gt;;</code></pre>
+<p>This type is missing some functions that are safe at <code>for&lt;T&gt; fn(Box&lt;T&gt;) -&gt; *mut T</code>, in particular
+those that return a null pointer. So this type is also robust. This is why the function is annotated
+<code>robust fn</code> and documented with a <code>Robustness</code> section. The fact that lifting the update type
+preserved its robustness, is due to variance. It was in a co-variant position.</p>
+<p>Let's look at the function definition first (and call-sites later).</p>
+<pre><code class="language-rust">/// Robustness: P is the set of non-null pointers
+robust fn into_raw&lt;T&gt;(b: Box&lt;T&gt;) -&gt; Update&lt;P, *mut T&gt; {
+    let result: *mut T = [...];
+    // SAFETY: The box pointer is non-null by invariant of Box.
+    result
+}</code></pre>
+<p>By typing we have <code>result: *mut T</code> and we need <code>result: Update&lt;P, *mut T&gt;</code> to return from the
+function. Because <code>*mut T</code> is not a subtype of <code>Update&lt;P, *mut T&gt;</code> (it's actually the contrary),
+this cast is unsafe and requires a manual proof. The manual proof refines the type of <code>result</code> from
+<code>*mut T</code> to <code>Update&lt;P, *mut T&gt;</code> by looking at the actual execution states and making sure they are
+all within <code>Update&lt;P, *mut T&gt;</code>. In this case, <code>Box&lt;T&gt;</code> has an internal invariant that the pointer is
+non-null, so the proof simply states this invariant.</p>
+<p>Let's now look at a call-site.</p>
+<pre><code class="language-rust">let p: *mut T = Box::into_raw(b);
+// SAFETY: The pointer was not modified since it was returned by Box::into_raw
+// which ensures it is non-null by robustness. So it is still non-null.
+unsafe { NonNull::new_unchecked(p) }</code></pre>
+<p>First, values may be implicitly cast by subtyping. This is what happens between the result of
+<code>Box::into_raw(b)</code> of type <code>Update&lt;P, *mut T&gt;</code> and the binding type of <code>p</code> which is <code>*mut T</code>,
+because <code>Update&lt;P, *mut T&gt;</code> is a subtype of <code>*mut T</code>. In particular, <code>Update&lt;P, *mut T&gt;</code> is not an
+unsafe type, it is only a robust type. And update types that are not unsafe can safely cast to the
+type they update (without an unsafe block and a safety comment).</p>
+<p>The more interesting fact is how we can transfer the information about execution states after
+<code>Box::into_raw()</code> returns to the unsafe cast even though we lost the type information. We need to
+verify that all execution operations since the last known states produce execution states that match
+the contract we need to prove. This is trivially the case here because the result value is not
+modified.</p>
+<p>In practice, the robustness of <code>Box::into_raw()</code> is much more precise than just returning a non-null
+pointer.</p>
+<pre><code class="language-rust">/// Robustness: Q is the set of non-aliased, aligned, allocated, and valid pointers
+robust fn into_raw&lt;T, P&gt;(b: Box&lt;Update&lt;P, T&gt;&gt;) -&gt; Update&lt;Q, *mut Update&lt;P, T&gt;&gt;;</code></pre>
+<p>The function is actually polymorphic over the type within the Box, which means it doesn't temper its
+content and simply returns the underlying pointer (theorem for free). This correctness property is
+not part of the safe type <code>for&lt;T&gt; fn(Box&lt;T&gt;) -&gt; *mut T</code>, the function could just return any pointer
+(including a null pointer). But updating the parameter and return types we can more precisely
+capture the behavior of the function, which matters when proving unsafe code because of the stronger
+contract.</p>
+<p>The type <code>Q</code> is actually a filter over <code>*mut Update&lt;P, T&gt;</code> and thus more precisely a function over
+types <code>Q(P)</code> parametric over <code>P</code>. So the result type is actually <code>Update&lt;Q(P), *mut T&gt;</code> (the type
+being updated doesn't matter, only its validity invariant does).</p>
+<p>Functions in the standard library may usually be assumed to have such strong robustness guarantees,
+in contrary to other libraries for which correctness may not usually be assumed to hold when proving
+unsafe code.</p>
+<h3 id="stringas_mut_vec"><a class="header" href="#stringas_mut_vec">String::as_mut_vec()</a></h3>
+<pre><code class="language-rust">/// Safety: P is the set of safe Vec&lt;u8&gt; that are UTF-8
+unsafe fn as_mut_vec(self: &amp;mut String) -&gt; &amp;mut [Vec&lt;u8&gt; .. Update&lt;P, Vec&lt;u8&gt;&gt;];</code></pre>
+<p>The type <code>Update&lt;P, Vec&lt;u8&gt;&gt;</code> contains all valid values of type <code>Vec&lt;u8&gt;</code> that are safe and UTF-8.
+It is a robust type because it is missing values that are safe (those that are not UTF-8) and does
+not contain unsafe values.</p>
+<p>We can lift the update type through the mutable reference and get:</p>
+<pre><code class="language-rust">/// Safety: P is the set of safe Vec&lt;u8&gt; that are UTF-8
+unsafe fn as_mut_vec(self: &amp;mut String) -&gt; Update&lt;&amp;mut [Vec&lt;u8&gt; .. P], &amp;mut Vec&lt;u8&gt;&gt;;</code></pre>
+<p>We get a similar reasoning as with <code>slice::get_unchecked()</code> because we have a robust type in a
+contra-variant position. The update type contains all valid values of type <code>&amp;mut Vec&lt;u8&gt;</code> that
+promise UTF-8 at the end of the borrow. So compared to the safe values of type <code>&amp;mut Vec&lt;u8&gt;</code>, the
+update type contains additional values (thus unsafe at <code>&amp;mut Vec&lt;u8&gt;</code>). This makes the update type
+unsafe.</p>
+<p>We can finally lift the update type through the function type and get:</p>
+<pre><code class="language-rust">/// Safety: P is the set of Vec&lt;u8&gt; that are UTF-8
+Update&lt;fn(&amp;mut String) -&gt; &amp;mut [Vec&lt;u8&gt; .. P], fn(&amp;mut String) -&gt; &amp;mut Vec&lt;u8&gt;&gt;</code></pre>
+<p>This type also has additional values compared to <code>fn(&amp;mut String) -&gt; &amp;mut Vec&lt;u8&gt;</code> and is thus
+unsafe. This is because the result type of a function is in a co-variant position, and the result
+was unsafe. The function type being thus unsafe, it has a <code>Safety</code> section and is annotated <code>unsafe fn</code>.</p>
+<p>Let's look at a call site.</p>
+<pre><code class="language-rust">/// SAFETY: At the end of the borrow, the message is ASCII, thus UTF-8.
+for byte in unsafe { message.as_mut_vec() } {
+    *byte &amp;= 0x7f;
+}</code></pre>
+<p>By typing we have <code>message.as_mut_vec()</code> of type <code>&amp;mut [Vec&lt;u8&gt; .. Update&lt;P, Vec&lt;u8&gt;&gt;]</code> and we need
+<code>&amp;mut Vec&lt;u8&gt;</code>, i.e. <code>&amp;mut [Vec&lt;u8&gt; .. Vec&lt;u8&gt;]</code>. Because this does not hold by subtyping (the
+promised type is robust, making the mutable reference unsafe), we need a manual proof. We must
+refine the promised type from <code>Vec&lt;u8&gt;</code> to <code>Update&lt;P, Vec&lt;u8&gt;&gt;</code> by contra-variance of the promised
+type, i.e. we must prove that the promised type is UTF-8. Because we convert all bytes to ASCII
+before the borrow ends, and don't modify the message further, we can claim that the message at the
+end of the borrow is ASCII and thus UTF-8.</p>
+<p>In practice, <code>String::as_mut_vec()</code> is also robust:</p>
+<pre><code class="language-rust">/// Safety and Robustness: P is the set of safe Vec&lt;u8&gt; that are UTF-8
+robust unsafe fn as_mut_vec(self: &amp;mut String) -&gt; &amp;mut Update&lt;P, Vec&lt;u8&gt;&gt;;</code></pre>
+<p>This function is both robust and unsafe. It is unsafe for the same reason as above (the type is
+robust at the end of the borrow) and it is robust because the returned type is robust at the
+beginning of the borrow. By being robust, this function type provides more freedom to call-sites.
+The following call-site would be unsound with the non-robust function type, but is sound with the
+robust function type.</p>
+<pre><code class="language-rust">/// SAFETY: Assuming the message is UTF-8 at the beginning of the borrow, it is still
+/// UTF-8 at the end of the borrow.
+for bytes in unsafe { message.as_mut_vec() }.chunks_exact_mut(2) {
+    // Convert code points encoded with 2 bytes at even offsets to ASCII.
+    if bytes[0] &amp; 0xe0 == 0xc0 {
+        bytes[0] &amp;= 0x3f;
+        bytes[1] &amp;= 0x7f;
+    }
+}</code></pre>
+<p>To go even further, because <code>String::as_mut_vec()</code> is part of the standard library, it is even more
+robust than the previous function type. It is actually polymorphic over the type of <code>self</code> (which
+contains 2 types because it's a mutable reference):</p>
+<pre><code class="language-rust">/// Safety and Robustness: P and Q are sets of valid values of Vec&lt;u8&gt;
+robust unsafe fn as_mut_vec&lt;P, Q&gt;(
+    self: Update&lt;&amp;mut [P .. Q], &amp;mut String&gt;
+) -&gt; Update&lt;&amp;mut [P .. Q], &amp;mut Vec&lt;u8&gt;&gt;;</code></pre>
+<p>The most common case is when the parameter is safe. This means both <code>P</code> and <code>Q</code> are the safety
+invariant of <code>String</code>, i.e. the set of UTF-8 values. But it is possible to also use unsafe or robust
+types (with respect to <code>String</code>) for <code>P</code> and <code>Q</code> independently of each other. An artificial example
+could look like this:</p>
+<pre><code class="language-rust">/// Sanitizes a string to make it UTF-8.
+///
+/// # Robustness
+///
+/// The message doesn't need to be UTF-8.
+robust fn sanitize(message: &amp;mut [Update&lt;Vec&lt;u8&gt;, String&gt; .. String]) {
+    // SAFETY: The message is ASCII at the end of the borrow.
+    for byte in unsafe { message.as_mut_vec::&lt;Vec&lt;u8&gt;, ASCII&gt;() } {
+        *byte &amp;= 0x7f;
+    }
+    // SAFETY(parameter): The message is ASCII at the beginning of the borrow.
+    // SAFETY(result): The message remains ASCII and is thus UTF-8 at the end of the
+    // borrow.
+    for byte in unsafe { message.as_mut_vec::&lt;ASCII, String&gt;() } {
+        *byte ^= 0x07;
+    }
+}</code></pre>
+<p>We already discussed the first transformation, so let's focus on the second one. By typing we have
+<code>message</code> of type <code>&amp;mut String</code> and <code>message.as_mut_vec()</code> of type <code>Update&lt;&amp;mut [ASCII .. String], &amp;mut Vec&lt;u8&gt;&gt;</code>. We need <code>message</code> to have type <code>Update&lt;&amp;mut [ASCII .. String], &amp;mut String&gt;</code> and
+<code>message.as_mut_vec()</code> to have type <code>&amp;mut Vec&lt;u8&gt;</code>. Both casts are unsafe because they don't hold by
+subtyping. The first one doesn't hold because we have to prove that <code>message</code> is initially ASCII,
+which we know by preceding code. The second one doesn't hold because we have to prove that
+<code>message.as_mut_vec()</code> is UTF-8 at the end of the borrow, which we do by using the robustness that
+it is initially ASCII and preserving this property to the end of the borrow.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="what-are-types"><a class="header" href="#what-are-types">What are types?</a></h1>
+<p>This chapter is an informal (and possibly opinionated) overview of type systems. It is necessary to
+understand this chapter to understand the mental model, because according to the mental model:</p>
+<blockquote>
+<p>Unsafe is a way to escape the type system.</p>
+</blockquote>
+<h2 id="programming-languages"><a class="header" href="#programming-languages">Programming languages</a></h2>
+<p>Programming languages usually provide the following components (there may be variations):</p>
+<ul>
+<li>A syntax to write programs, usually some grammar.</li>
+<li>The meaning of programs, usually some operational semantics (how programs execute).</li>
+</ul>
+<p>The most common and practical meaning of programs is their execution output (effects and/or values),
+which is usually why programs are written and executed. However, for most realistic programming
+languages, not all programs have a meaning. In particular, program execution is not always defined
+(think undefined behavior). <strong>This is the reason why type systems exist.</strong></p>
+<h2 id="type-systems"><a class="header" href="#type-systems">Type systems</a></h2>
+<p>Type systems try to decide whether programs are defined<sup class="footnote-reference"><a href="#goal">1</a></sup> in a mechanized way. They tell
+whether a program is defined without human interaction, but they may need non-interactive human
+assistance in the form of program annotations (see next section).</p>
+<p>Type systems come with a proof of <em>soundness</em>: if the type system says a program is defined then the
+program is defined. However, this classification is an undecidable problem for non-trivial
+languages, which is why type systems may classify a program as possibly undefined although it is
+actually defined. <strong>This is the reason why unsafe exists.</strong></p>
+<p>Unsafe is a way to make the type system agree that a program is defined. This argumentation is done
+informally by a human, and is thus not mechanized. This suddenly introduces the notion of human
+errors. The usage of unsafe may thus break the soundness property of the type system. <strong>This is why
+soundness must be preserved when using unsafe.</strong></p>
+<h2 id="types"><a class="header" href="#types">Types</a></h2>
+<p>Most type systems follow the same techniques. They introduce a notion of types to classify programs.
+Types are an additional syntax (with its own grammar) to annotate programs and their parts (like
+expressions, variables, statements, functions, etc). The type system provides rules on how those
+types combine and interact based on the program structure.</p>
+<p>It is natural to interpret types as sets of <em>values</em> (or more generally mathematical objects
+describing the possible runtime states at a given point in the execution of the program they are
+annotating), called their <em>type interpretation</em> and written <code>|T|</code>. For example, the interpretation
+<code>|i32|</code> of <code>i32</code> could be all the 32-bits integers, and <code>|*const i32|</code> could be all the pointer-wide
+integers with an optional provenance. This interpretation may depend on the execution environment,
+like the memory.</p>
+<p>Types can also be seen as a form of contract between different parts of the program. This is how,
+when all the contracts in a program are satisfied, it is possible to say something about the
+program's behavior. In particular, when the output of one part of a program is the input of another
+part of the program, the type (or contract) at this junction specifies which values are permitted.
+The output program promises to not output values outside the contract, and the input program
+promises to accept all values inside the contract.</p>
+<h2 id="subtyping"><a class="header" href="#subtyping">Subtyping</a></h2>
+<p>Interpreting types as sets of values naturally generates a notion of <em>subtyping</em> through set
+inclusion. A type <code>A</code> is a subtype of <code>B</code>, which we'll write <code>A &lt;: B</code>, if <code>|A|</code> is included in
+<code>|B|</code>. For example, all values of type <code>&amp;'static i32</code> are also values of type <code>&amp;'a i32</code> so <code>&amp;'static i32</code> is a subtype of <code>&amp;'a i32</code>.</p>
+<p>This notion of subtyping can be used to plug parts of a program together even when they don't have
+the same contract. For example, an expression of type <code>T</code> can be used where an expression of type
+<code>S</code> is expected as long as <code>T</code> is a subtype of <code>S</code>. Because subtyping is a reflexive and transitive
+relation, we can always require contracts to match exactly and let the programmer explicitly use
+subtyping to change one or the other to make them match.</p>
+<h2 id="variance"><a class="header" href="#variance">Variance</a></h2>
+<p>The notions of subtyping and type-level functions naturally generate a notion of <em>variance</em> defining
+how <code>Foo&lt;A&gt;</code> and <code>Foo&lt;B&gt;</code> relate when <code>A</code> is a subtype of <code>B</code>:</p>
+<ul>
+<li>If <code>Foo&lt;T&gt;</code> is co-variant in <code>T</code> then <code>Foo&lt;A&gt;</code> is a subtype of <code>Foo&lt;B&gt;</code>.</li>
+<li>If <code>Foo&lt;T&gt;</code> is contra-variant in <code>T</code> then <code>Foo&lt;B&gt;</code> is a subtype of <code>Foo&lt;A&gt;</code>.</li>
+<li>If <code>Foo&lt;T&gt;</code> is invariant in <code>T</code> then there's no particular relation between <code>Foo&lt;A&gt;</code> and <code>Foo&lt;B&gt;</code>.</li>
+</ul>
+<p>A well-known example of variance is the function type <code>fn(P) -&gt; R</code>. It is contra-variant in <code>P</code> and
+co-variant in <code>R</code>. You can call a function with an argument of type <code>Q</code> as long as <code>Q &lt;: P</code>, and you
+can use its result where an expression of type <code>S</code> is expected as long as <code>R &lt;: S</code>. Equivalently, we
+have <code>fn(P) -&gt; R &lt;: fn(Q) -&gt; S</code> thus the function also has the type <code>fn(Q) -&gt; S</code>.</p>
+<p>A less-known (and possibly controversial) example is the mutable reference type <code>&amp;mut T</code>. It is
+usually assumed to be invariant in <code>T</code>. In reality, there are 2 separate occurrences of <code>T</code> in <code>&amp;mut T</code>, one of them being co-variant and the other contra-variant. This is discussed in the next
+chapter.</p>
+<div class="footnote-definition" id="goal"><sup class="footnote-definition-label">1</sup>
+<p>Type systems may also be used to decide other properties (like termination) or to generate
+parts of the program. Those alternative roles are not relevant for unsafe and will be ignored.</p>
+</div>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="mutable-references"><a class="header" href="#mutable-references">Mutable references</a></h1>
+<p>The mutable reference type in the mental model is written <code>&amp;mut [T .. S]</code>. It means that you have a
+pointer with (temporary) exclusive access to a value of type <code>T</code>, and that you promise that the
+value will be of type <code>S</code> when the borrow ends. The syntax <code>[T .. S]</code> represents the type of the
+value going from <code>T</code> to <code>S</code> over the lifetime of the borrow. We'll call <code>T</code> the type of the mutable
+reference and <code>S</code> the <em>promised type</em> of the mutable reference.</p>
+<p>Another way to look at this, is that a mutable reference is made of 2 things:</p>
+<ul>
+<li>A pointer to a temporarily owned value of type <code>T</code>.</li>
+<li>A function taking the same pointer but with type <code>S</code>. This function is automatically called when
+the borrow ends to return the ownership of the value to the lender.</li>
+</ul>
+<p>Yet another way to look at this, is that mutable references are like reversed functions:</p>
+<ul>
+<li>Functions <code>fn(P) -&gt; R</code> ask for a value of type <code>P</code> then give back a value of type <code>R</code>.</li>
+<li>Mutable references <code>&amp;mut [T .. S]</code> give a value of type <code>T</code> then ask it back at type <code>S</code>.</li>
+</ul>
+<p>This is the same concept as the <a href="https://flux-rs.github.io/flux/blog/02-ownership.html#borrowing-strong-references">strong
+references</a> in
+<a href="https://github.com/flux-rs/flux">Flux</a>.</p>
+<h2 id="variance-1"><a class="header" href="#variance-1">Variance</a></h2>
+<p>The mutable reference type <code>&amp;mut [T .. S]</code> is co-variant in <code>T</code> and contra-variant in <code>S</code>. When
+enforcing <code>T</code> and <code>S</code> to be syntactically equal, like this is done with the <code>&amp;mut T</code> notation, the
+type naturally becomes invariant in <code>T</code>. Being able to dissociate <code>T</code> and <code>S</code> is important to
+understand unsafe, and mutable references in the mental model will explicitly dissociate those 2
+types by using the <code>&amp;mut [T .. S]</code> notation.</p>
+<h2 id="borrowing"><a class="header" href="#borrowing">Borrowing</a></h2>
+<p>When lending a place of type <code>T</code>, the lender may choose the type <code>S</code>, that the place should have
+when returned by the borrower. For example, if a lender has a place <code>x</code> of type <code>T</code> and creates
+<code>&amp;mut x</code> for a borrower, they may ask the borrower to return the place with type <code>S</code>, at which point
+the lender would get back ownership of <code>x</code> but with type <code>S</code> instead of <code>T</code>.</p>
+<p>Re-borrowing is a particular case of borrowing where the initial place is already borrowed. For
+example, if the lender (itself a borrower) has a place <code>x</code> of type <code>&amp;mut [T .. S]</code>, they may create
+<code>&amp;mut *x</code> of type <code>&amp;mut [T .. Q]</code>. The borrower would need to return the place with type <code>Q</code>, thus
+letting the lender have the place at type <code>&amp;mut [Q .. S]</code> instead of <code>&amp;mut [T .. S]</code>. In particular,
+re-borrowing doesn't affect the final contract with the original lender, who is still expecting the
+place to be at type <code>S</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="what-is-unsafe"><a class="header" href="#what-is-unsafe">What is unsafe?</a></h1>
+<p>This chapter provides the mental model of unsafe, relying on the concepts of the previous chapters.</p>
+<h2 id="anonymous-types"><a class="header" href="#anonymous-types">Anonymous types</a></h2>
+<p>Unsafe is a way to locally introduce an <em>anonymous type</em> given its interpretation. In practice, this
+is done by reusing the interpretation of an existing type and documenting how that interpretation is
+modified. For example, an occurrence of <code>*const i32</code> in the program could be documented as being
+restricted to values that are valid for read, aligned, and pointing to an initialized <code>i32</code>. That
+particular occurrence of <code>*const i32</code> would actually be an anonymous type created for the occasion
+with the documented interpretation, essentially updating the contract at that location.</p>
+<h2 id="proofs"><a class="header" href="#proofs">Proofs</a></h2>
+<p>Recall how using an expression of type <code>A</code> where a value of type <code>B</code> is expected requires to show
+that <code>A</code> is a subtype of <code>B</code>. When using unsafe, it may happen that this is not the case. This
+usually happens when <code>B</code> is an anonymous type over <code>A</code>, like the <code>*const i32</code> example above. In
+those cases, one has to manually prove that the possible values of the expression are actually in
+<code>B</code>. This proof cannot rely on types and must rely on the correctness of the program.</p>
+<h2 id="validity"><a class="header" href="#validity">Validity</a></h2>
+<p>Rust has an unusual concept compared to other type systems. It has an additional notion of type
+interpretation. Besides the usual interpretation of types which defines the set of <em>safe values</em> (as
+defined by the <a href="https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html">safety invariant</a> of the type), there is an interpretation of types
+which defines the set of <em>valid values</em> (as defined by the <a href="https://www.ralfj.de/blog/2018/08/22/two-kinds-of-invariants.html">validity invariant</a> of
+the type). The compiler doesn't know that only safe values are possible, it believes that <em>unsafe
+values</em> (values that are valid but not safe) are also possible, and will not optimize if an unsafe
+value would invalidate the optimization.</p>
+<p>This notion is actually necessary due to type composition: an anonymous type in a contra-variant
+position would actually increase the set of possible values. The validity invariant must at least
+contain the interpretation of the type where all types in contra-variant positions have been
+replaced by the <em>bottom type</em> (the type with an empty interpretation).</p>
+<h2 id="properties"><a class="header" href="#properties">Properties</a></h2>
+<p>Unsafe may only update interpretations within the bounds of the validity invariant. In particular,
+it may add unsafe values and it may remove safe values, but it may not do anything else. An <em>unsafe
+type</em> contains at least one unsafe value and a <em>robust type</em> is missing at least one safe value. By
+those definitions, a <em>safe type</em> is neither unsafe nor robust, its interpretation is exactly the
+safe values. Only anonymous types may be unsafe and/or robust. In particular, an anonymous type may
+be both unsafe and robust.</p>
+<p>An unsafe type is a type that has <em>restrictions to use</em>, because one needs to take care of those
+additional values. A robust type on the contrary is a type that provides <em>permissions to use</em>,
+because some safe but otherwise problematic values are now absent.</p>
+<p>Let's illustrate this with the function type <code>fn(P) -&gt; R</code>. By contra-variance, it is unsafe if <code>P</code>
+is robust. This is the most common case, because <code>P</code> has permissions to use that its safe version
+would otherwise not have. And by co-variance, it is unsafe if <code>R</code> is unsafe. This is less common,
+but happens when <code>R</code> has restrictions to use, like <code>Pin::get_unchecked_mut() -&gt; &amp;mut T</code>.</p>
+<p>Similarly for the mutable reference type <code>&amp;mut [T .. S]</code>. By contra-variance, it is unsafe if <code>S</code> is
+robust. This is the case with the result type of <code>String::as_mut_vec() -&gt; &amp;mut Vec&lt;u8&gt;</code> that
+requires permissions to use <code>S</code> as UTF-8 (removing the safe values of <code>Vec&lt;u8&gt;</code> that are not UTF-8).
+By co-variance, it is unsafe if <code>T</code> is unsafe. This is the case with the result type of
+<code>Pin::get_unchecked_mut() -&gt; &amp;mut T</code> that enforces restrictions to use <code>T</code> as possibly pinned
+(adding the unsafe values that are safe when under <code>Pin</code>). Note that <code>S</code> also has restrictions to
+use (the same ones as <code>T</code>), thus by contra-variance making the result type and thus the type of
+<code>Pin::get_unchecked_mut()</code> robust (remember that types may be both unsafe and robust).</p>
+<h2 id="custom-types"><a class="header" href="#custom-types">Custom types</a></h2>
+<p>It is interesting to observe that for builtin types, the origin of unsafe seems to always be a
+robust type in contra-variant position. We could thus think that it would be enough to only update
+types down from the safety invariant instead of the validity invariant. But keeping the option to
+add unsafe values to a type is necessary for custom types and reverting the effect of an anonymous
+type.</p>
+<p>A custom type gives a name to a type expression, its definition. When the custom type is used
+instead of its definition, anonymous types can only be introduced directly on the custom type
+because the definition is hidden. If one wanted to make the type unsafe by making a contra-variant
+type robust within the definition, now one needs to make the custom type unsafe by adding unsafe
+values.</p>
+<p>Let's use the function type <code>fn(*const i32)</code> as initial illustration. If we define a custom type
+<code>Foo</code> with that function type as definition and we want a specific usage of <code>Foo</code> to actually
+contain unsafe functions, we can't introduce an anonymous type on <code>*const i32</code> because it's hidden
+behind the definition of <code>Foo</code>. We have to introduce the anonymous type on <code>Foo</code>, which is the only
+thing visible, and add those unsafe values.</p>
+<p>It is also possible for a custom type definition to have an anonymous type. This is for example the
+case of <code>Vec&lt;i32&gt;</code>. Its simplified definition is an anonymous type on <code>{ ptr: *mut i32, len: usize, cap: usize }</code> removing some safe values. We'll focus on the safe values where not all of the first
+<code>len</code> elements pointed by <code>ptr</code> are initialized. The safety invariant of <code>Vec&lt;i32&gt;</code> thus doesn't
+contain those (otherwise safe) values, making a pointer to uninitialized data with non-zero length
+an unsafe value for that type. One may want to add those unsafe values for some specific occurrences
+of <code>Vec&lt;i32&gt;</code>, requiring again an anonymous type. This time it's not only because the definition is
+hidden, but also because we want to revert the effect of an anonymous type adding back values that
+were removed.</p>
+<p>Note that, while anonymous types in custom types define a new safety invariant, it is also possible
+to define custom types with a different validity invariant using rustc annotations. For example,
+<code>NonZeroI32</code> has the value zero removed from both the safety invariant and the validity invariant.
+This type doesn't have any unsafe value. It is thus not possible to create an unsafe version of that
+type. If you would remove the rustc annotations and keep the anonymous type, then zero would not be
+safe but still be valid, and thus it would be an unsafe value that can be added to create an unsafe
+version of that type.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="making-it-explicit"><a class="header" href="#making-it-explicit">Making it explicit</a></h1>
+<p>This last chapter gives an explicit syntax to the mental model. This may help understand it better,
+but most importantly it facilitates clear discussion about what is actually going on in a program.</p>
+<p>Note that we are not actually introducing this syntax to Rust. This is a mental model. We are just
+making it explicit in our collective mind.</p>
+<h2 id="the-update-type"><a class="header" href="#the-update-type">The update type</a></h2>
+<p>The <code>Update</code> type makes anonymous types explicit, including their predicate and proof.</p>
+<pre><code class="language-rust">/// Creates an anonymous type from a source type.
+///
+/// The created anonymous type (more precisely its interpretation) is the set of
+/// valid values of the source type (its validity invariant) satisfying a
+/// predicate.
+///
+/// The predicate is usually left implicit and defined in some documentation,
+/// thus writing `Update&lt;Source&gt;`.
+#[repr(transparent)]
+pub struct Update&lt;Predicate, Source: ?Sized&gt; {
+    /// A proof that the value satisfies the predicate.
+    ///
+    /// The proof is usually left implicit and defined in some comment, thus
+    /// writing `Update { value }`. We may also abusively write `Update(value)`
+    /// instead.
+    pub proof: Predicate,
+
+    /// The value whose type is being updated.
+    ///
+    /// It is a valid value of the source type that satisfies the predicate.
+    pub value: Source,
+}</code></pre>
+<p>The predicate should be documented in 2 different sections depending on the variance in which the
+source type is occurring within the type of the item where the documentation is attached. If the
+predicate makes the item type unsafe, then it should be documented in a <code># Safety</code> section. If it
+makes the item type robust, then it should be documented in a <code># Robustness</code> section. It is
+recommended to avoid making item types robust (and thus avoid robustness sections) until an unsafe
+block somewhere depends on this property, to avoid unnecessary work by unsafe reviewers.</p>
+<p>The proof should be written in a <code>// SAFETY:</code> comment.</p>
+<h2 id="the-proof-type"><a class="header" href="#the-proof-type">The proof type</a></h2>
+<p>A weird but useful special case of the update type is when applied to the unit type. In that case,
+the only possible interpretations are the empty set or the singleton set, thus the only information
+of this type is whether it is inhabited, which is defined by whether the predicate holds. This type
+is really only useful when the predicate depends on the execution environment (the memory, the
+stack, the global variables, etc). It can be used to gate parts of the program that must only
+execute if a predicate holds, by taking a value of that type.</p>
+<pre><code class="language-rust">/// The proof that a predicate holds.
+pub type Proof&lt;Predicate&gt; = Update&lt;Predicate, ()&gt;;</code></pre>
+<h2 id="examples-1"><a class="header" href="#examples-1">Examples</a></h2>
+<h3 id="safety-documentation"><a class="header" href="#safety-documentation">Safety documentation</a></h3>
+<p>The most common examples of safety documentation are parameters of unsafe functions. The parameters
+are robust making the function unsafe due to contra-variance. And they are robust because they have
+less safe values, thus providing permissions to use.</p>
+<pre><code class="language-rust">/// Reads the value from a pointer without moving it.
+///
+/// # Safety
+///
+/// The pointer must be valid for reads, aligned, and pointing to a safe value.
+pub fn read&lt;T&gt;(ptr: Update&lt;*const T&gt;) -&gt; T;</code></pre>
+<p>Less common examples are results of unsafe functions. The results are unsafe making the function
+unsafe due to co-variance. And they are unsafe because they have unsafe values, thus enforcing
+restrictions to use.</p>
+<pre><code class="language-rust">/// Gets a mutable reference to the pinned data.
+///
+/// # Safety
+///
+/// The data in the result must not be moved.
+pub fn get_unchecked_mut&lt;T&gt;(pin: Pin&lt;&amp;mut T&gt;) -&gt; Update&lt;&amp;mut T&gt;</code></pre>
+<h3 id="robustness-documentation"><a class="header" href="#robustness-documentation">Robustness documentation</a></h3>
+<p>The most common examples of robustness documentation are results of functions. The results are
+robust making the function robust due to co-variance. And they are robust because they have less
+safe values, thus providing permissions to use.</p>
+<pre><code class="language-rust">/// Consumes a box returning its raw pointer.
+///
+/// # Robustness
+///
+/// The pointer will be properly aligned and non-null.
+pub fn into_raw(b: Box&lt;T&gt;) -&gt; Update&lt;*mut T&gt;</code></pre>
+<p>Less common examples are parameters of functions. The parameters are unsafe making the function
+robust due to contra-variance. And they are unsafe because they have unsafe values, thus enforcing
+restrictions to use.</p>
+<pre><code class="language-rust">/// Prints a message to the standard output.
+///
+/// # Robustness
+///
+/// The message doesn't need to be valid UTF-8.
+pub fn robust_print(msg: Update&lt;&amp;str&gt;);</code></pre>
+<p>Even though documenting robustness makes the API more precise, it has the downside of increasing the
+burden of unsafe reviews. A function for which correctness would otherwise not impact unsafe code,
+now has the potential of impacting unsafe code and must be reviewed appropriately. If this potential
+is not actually used, then this review is unnecessary.</p>
+<p>That said, the standard library can be assumed to be maximally robust (correctness defines
+robustness). If the standard library is incorrect, then we have other problems that are as big as
+unsoundness of third-party crates (that would be sound if the standard library was correct).</p>
+<h3 id="safety-comments"><a class="header" href="#safety-comments">Safety comments</a></h3>
+<p>Safety comments can both produce and use proofs from the update type.</p>
+<pre><code class="language-rust">/// Consumes a box returning its non-null pointer.
+pub fn into_non_null(b: Box&lt;T&gt;) -&gt; NonNull&lt;T&gt; {
+    let Update(ptr) = Box::into_raw(b);
+    // SAFETY: The pointer is non-null because Box::into_raw() returns a proof
+    // that it's non-null and properly aligned.
+    NonNull::new_unchecked(Update(ptr.value))
+}</code></pre>
+<h3 id="custom-types-1"><a class="header" href="#custom-types-1">Custom types</a></h3>
+<p>Notice how in the previous section, <code>into_non_null()</code> replaces the robustness of <code>into_raw()</code> with
+the safety invariant of <code>NonNull</code>, essentially giving a name to its anonymous result type. This is
+done by having <code>NonNull&lt;T&gt;</code> be a custom type around <code>Update&lt;*mut T&gt;</code>. We'll ignore alignment and
+variance for simplicity. We'll also ignore the rustc annotations that shrink the validity invariant.</p>
+<pre><code class="language-rust">/// A non-null pointer.
+#[repr(transparent)]
+pub struct NonNull&lt;T: ?Sized&gt; {
+    /// The wrapped pointer.
+    ///
+    /// # Robustness
+    ///
+    /// The pointer is non-null.
+    ptr: Update&lt;*mut T&gt;,
+}</code></pre>
+<p>Making a type robust is the most common reason to create custom types, but they can also be used to
+make a type unsafe.</p>
+<pre><code class="language-rust">/// A pinned pointer.
+#[repr(transparent)]
+pub struct Pin&lt;P&gt; {
+    /// The wrapped pointer.
+    ///
+    /// # Safety
+    ///
+    /// The pointer cannot be moved unless it implements `Unpin`.
+    ptr: Update&lt;P&gt;,
+}</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="unsafe-blocks"><a class="header" href="#unsafe-blocks">Unsafe blocks</a></h1>
+<p>Rust provides the following <a href="https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html#unsafe-superpowers">unsafe superpowers</a>:</p>
+<ul>
+<li>Dereference a raw pointer</li>
+<li>Call an unsafe function or method</li>
+<li>Access or modify a mutable static variable</li>
+<li>Implement an unsafe trait</li>
+<li>Access fields of unions</li>
+</ul>
+<p>Most of them require an unsafe block. When translating an unsafe block to the mental model, the use
+of the unsafe superpowers are made explict, preserving the safety comment if any.</p>
+<h2 id="dereference-a-raw-pointer"><a class="header" href="#dereference-a-raw-pointer">Dereference a raw pointer</a></h2>
+<p>Dereferencing a raw pointer can be seen as an operation that takes a value of some robust pointer
+type and returns a place. The exact predicate of that robust type is not part of the mental model,
+only making the operation take <code>Update&lt;*const T&gt;</code> or <code>Update&lt;*mut T&gt;</code> is.</p>
+<pre><code class="language-rust">// SAFETY: The pointer is valid, aligned, and points to a safe value.
+unsafe { *ptr }</code></pre>
+<p>would translate to:</p>
+<pre><code class="language-rust">// SAFETY: The pointer is valid, aligned, and points to a safe value.
+*Update(ptr)</code></pre>
+<p>or more pedantically:</p>
+<pre><code class="language-rust">let proof = "The pointer is valid, aligned, and points to a safe value.";
+*Update { proof, value: ptr }</code></pre>
+<h2 id="call-an-unsafe-function-or-method"><a class="header" href="#call-an-unsafe-function-or-method">Call an unsafe function or method</a></h2>
+<p>Calling an unsafe function or method is the same as calling a regular function or method, except
+that the parameters using the update type (here <code>Update&lt;*const T&gt;</code>) must be adapted.</p>
+<pre><code class="language-rust">// SAFETY: &lt;justification for add&gt;. &lt;justification for read&gt;.
+unsafe { ptr.add(start).read() }</code></pre>
+<p>would translate to:</p>
+<pre><code class="language-rust">// SAFETY: &lt;justification for add&gt;. &lt;justification for read&gt;.
+Update(Update(ptr).add(start)).read()</code></pre>
+<p>Note how the location of the usage of both unsafe superpowers had to be made explicit. In
+particular, the pedantic version could use 2 distinct proofs:</p>
+<pre><code class="language-rust">let proof = "justification for add";
+let ptr = Update { proof, value: ptr }.add(start);
+let proof = "justification for read";
+Update { proof, value: ptr }.read()</code></pre>
+<h2 id="access-or-modify-a-mutable-static-variable"><a class="header" href="#access-or-modify-a-mutable-static-variable">Access or modify a mutable static variable</a></h2>
+<p>Accessing or modifying a mutable static variable can be seen as an operation that takes a mutable
+static variable with a proof and returns a place. The proof states that the mutable variable is not
+aliased while the place is alive.</p>
+<pre><code class="language-rust">static mut COUNTER: u32 = 0;
+// SAFETY: &lt;justification&gt;.
+unsafe { COUNTER += 1 };</code></pre>
+<p>would translate to:</p>
+<pre><code class="language-rust">static mut COUNTER: u32 = 0;
+// SAFETY: &lt;justification&gt;.
+access_static_mut!(COUNTER, Update(())) += 1;</code></pre>
+<p>We have to use a macro because we need to pass the mutable static as a name without accessing it.</p>
+<h2 id="implement-an-unsafe-trait"><a class="header" href="#implement-an-unsafe-trait">Implement an unsafe trait</a></h2>
+<p>This doesn't require an unsafe block and will be treated in its own chapter.</p>
+<h2 id="access-fields-of-unions"><a class="header" href="#access-fields-of-unions">Access fields of unions</a></h2>
+<p>Accessing a field of a union can be seen as an operation that takes a place to the union, the field
+to access, and a proof, and returns the place of the field. The proof states that accessing that
+field of that union for that lifetime is valid.</p>
+<pre><code class="language-rust">// SAFETY: &lt;justification&gt;.
+unsafe { u.f1 }</code></pre>
+<p>would translate to:</p>
+<pre><code class="language-rust">// SAFETY: &lt;justification&gt;.
+access_union_field!(u, f1, Update(()))</code></pre>
+<p>Similarly for mutable static variables, we also need a macro because we need to pass the union as a
+place and its field as a name.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="unsafe-functions"><a class="header" href="#unsafe-functions">Unsafe functions</a></h1>
+<p>A function (or method) type is unsafe when its interpretation may contain an unsafe value. This is
+usually either because it takes a robust type or returns an unsafe type. In those cases, the
+appropriate parameter or result type is wrapped under the update type with its predicate defined in
+the safety section of the function documentation.</p>
+<pre><code class="language-rust">unsafe fn read&lt;T&gt;(p: *const T) -&gt; T;
+unsafe fn get_unchecked_mut&lt;T&gt;(pin: Pin&lt;&amp;mut T&gt;) -&gt; &amp;mut T</code></pre>
+<p>would translate to (preserving any safety documentation):</p>
+<pre><code class="language-rust">fn read&lt;T&gt;(ptr: Update&lt;*const T&gt;) -&gt; T;
+fn get_unchecked_mut&lt;T&gt;(pin: Pin&lt;&amp;mut T&gt;) -&gt; Update&lt;&amp;mut T&gt;</code></pre>
+<p>It is also possible that the predicate isn't about a single type, in which case it may be more
+elegant to use the proof type:</p>
+<pre><code class="language-rust">unsafe fn unchecked_add(x: i32, y: i32) -&gt; i32;</code></pre>
+<p>would translate to (preserving any safety documentation):</p>
+<pre><code class="language-rust">fn unchecked_add(x: i32, y: i32, p: Proof) -&gt; i32;</code></pre>
+<p>This is a function type translation, so it applies to all unsafe function types (i.e. within
+function declarations, function definitions, function pointers, and so even when nested within
+another type like <code>Vec&lt;unsafe fn()&gt;</code>).</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="unsafe-traits"><a class="header" href="#unsafe-traits">Unsafe traits</a></h1>
+<p>A trait can be unsafe for different reasons:</p>
+<ul>
+<li>One of its associated type (including inherited) or the implemented type itself must satisfy a
+predicate.</li>
+<li>One of its method type (including inherited) is robust.</li>
+<li>One of its associated constant type (including inherited) is robust.</li>
+</ul>
+<p>Those are documented in the safety section of the trait documentation.</p>
+<p>An unsafe trait is translated by adding an associated constant of the proof type, which we'll call
+an <em>associated proof</em>. The predicate of the proof type is defined in the safety section and
+describes why the trait is unsafe.</p>
+<pre><code class="language-rust">unsafe trait Send {}</code></pre>
+<p>would translate to (preserving any safety documentation):</p>
+<pre><code class="language-rust">trait Send {
+    const P: Proof;
+}</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="unsafe-implementations"><a class="header" href="#unsafe-implementations">Unsafe implementations</a></h1>
+<p>An unsafe implementation is translated by implementing the associated proof.</p>
+<pre><code class="language-rust">// SAFETY: &lt;justification&gt;.
+unsafe impl Send for Mutex {}</code></pre>
+<p>would translate to:</p>
+<pre><code class="language-rust">impl Send for Mutex {
+    // SAFETY: &lt;justification&gt;.
+    const P: Proof = Update(());
+}</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="navigating-pin"><a class="header" href="#navigating-pin">Navigating Pin</a></h1>
+<p>This chapter is not about an unsafe construct, but about the <a href="https://doc.rust-lang.org/std/pin/struct.Pin.html">Pin</a> type of the standard
+library. This type can be quite subtle, and this chapter may get some stuff wrong<sup class="footnote-reference"><a href="#issue">1</a></sup>. But
+because it is strongly related to unsafe, it is a good candidate to demonstrate the mental model on
+a practical example.</p>
+<h2 id="what-is-pin"><a class="header" href="#what-is-pin">What is Pin?</a></h2>
+<p>The author believes that Pin is just a set of guidelines to design a pinned typestate. The type
+itself doesn't need to be used. One could implement their own typestates PinFooRef, PinFooMut, and
+PinFooBox without using Pin. However using the Pin type directly reduces the cognitive load for
+users of the API, as they can reuse their knowledge about Pin instead of learning something new.</p>
+<p>The type <code>Pin&lt;T&gt;</code> is a name for <code>Update&lt;P, T&gt;</code> where <code>P</code> describes what pinned values of type <code>T</code>
+are. In particular, <code>P</code> is specific to <code>T</code>. Different types <code>T</code> will have different predicates <code>P</code>
+to describe their pinned values.</p>
+<pre><code class="language-rust">/// Updates the safety invariant of T to contain pinned values.
+pub type Pin&lt;T&gt; = Update&lt;"Pinned values of type T", T&gt;;</code></pre>
+<p>It is natural to wonder whether <code>T &lt;: P</code> must hold<sup class="footnote-reference"><a href="#safe-subtype-pin">2</a></sup>. The author believes that it
+is not necessary but convenient to have and thus recommended when possible.</p>
+<p>An important aspect of Pin is that it is not possible to safely access <code>T</code> from <code>Pin&lt;T&gt;</code> since they
+have different safety invariant. However it is possible to go in both directions with unsafe
+functions:</p>
+<pre><code class="language-rust">pub unsafe fn new_unchecked&lt;T&gt;(T) -&gt; Pin&lt;T&gt;;
+pub unsafe fn get_unchecked_mut&lt;T&gt;(Pin&lt;&amp;mut T&gt;) -&gt; &amp;mut T;</code></pre>
+<p>When we look at both of those functions in the mental model (writing <code>P</code> for the predicate of a
+pinned <code>T</code>), we realize that they are just identity functions. They simply wrap or unwrap the
+definition of <code>Pin</code>.</p>
+<pre><code class="language-rust">pub unsafe fn new_unchecked&lt;T&gt;(Update&lt;P, T&gt;) -&gt; Pin&lt;T&gt;;
+pub unsafe fn get_unchecked_mut&lt;T&gt;(Pin&lt;&amp;mut T&gt;) -&gt; Update&lt;P, &amp;mut T&gt;;</code></pre>
+<p>There are however many subtleties behind those 2 functions. Let's look at them in more details.</p>
+<h3 id="wrapping-pin"><a class="header" href="#wrapping-pin">Wrapping Pin</a></h3>
+<p>Let's look at mutable references only, because that's the most complex case.</p>
+<pre><code class="language-rust">pub unsafe fn new_unchecked&lt;T&gt;(&amp;mut T) -&gt; Pin&lt;&amp;mut T&gt;;</code></pre>
+<p>In the mental model, this function is actually polymorphic over both types of the mutable reference.</p>
+<pre><code class="language-rust">pub unsafe fn new_unchecked&lt;T, S&gt;(&amp;mut [T .. S]) -&gt; Pin&lt;&amp;mut [T .. S]&gt;;</code></pre>
+<p>Because we know both types must have the same validity invariant, let's write <code>Q</code> and <code>R</code> predicates
+over the validity invariant of <code>T</code>. The type now becomes:</p>
+<pre><code class="language-rust">(&amp;mut [Update&lt;Q, T&gt; .. Update&lt;R, T&gt;]) -&gt; Pin&lt;&amp;mut [Update&lt;Q, T&gt; .. Update&lt;R, T&gt;]&gt;
+//     ^--- A  ---^    ^--- B  ---^                ^---  C ---^    ^---  D ---^</code></pre>
+<p>We'll use the notation in the comment above (<code>A</code>, <code>B</code>, <code>C</code>, and <code>D</code>) to talk about the different
+values at the given types. We'll also focus only on 2 predicates: <code>T</code> the safety invariant of <code>T</code>,
+and <code>P</code> the safety invariant of <code>T</code> in the pinned typestate.</p>
+<div class="table-wrapper"><table><thead><tr><th><code>Q</code></th><th><code>R</code></th><th><code>A &lt;: Q</code></th><th><code>R &lt;: B</code></th><th><code>Q &lt;: C</code></th><th><code>D &lt;: R</code></th></tr></thead><tbody>
+<tr><td><code>T</code></td><td><code>T</code></td><td><code>T == T</code></td><td><code>T == T</code></td><td><code>T &lt;: P</code></td><td><code>P &lt;: T</code></td></tr>
+<tr><td><code>T</code></td><td><code>P</code></td><td><code>T == T</code></td><td><code>P &lt;: T</code></td><td><code>T &lt;: P</code></td><td><code>P == P</code></td></tr>
+<tr><td><code>P</code></td><td><code>T</code></td><td><code>T &lt;: P</code></td><td><code>T == T</code></td><td><code>P == P</code></td><td><code>P &lt;: T</code></td></tr>
+<tr><td><code>P</code></td><td><code>P</code></td><td><code>T &lt;: P</code></td><td><code>P &lt;: T</code></td><td><code>P == P</code></td><td><code>P == P</code></td></tr>
+</tbody></table>
+</div>
+<p>If <code>T &lt;: P</code> then there is nothing to prove for those cells (and that's actually why the function is
+robust). However, <code>P &lt;: T</code> usually does not hold and needs a proof. For each row, this cell is why
+the function is unsafe. We can see that the problem is always the promised type of the mutable
+references (<code>B</code> and <code>D</code>), i.e. what happens at the end of the borrow, because this will inject a
+value that is safe at <code>P</code> into a value that is safe at <code>T</code>, hence the <code>P &lt;: T</code> constraint.</p>
+<p>There are essentially 2 reasons (assuming <code>T &lt;: P</code>) why the function can be unsafe:</p>
+<ul>
+<li>The promised type <code>R</code> of the mutable reference is <code>T</code>, in which case the result of the function is
+unsafe because its promised type <code>D</code> is robust. One must prove that at the end of the borrow, the
+value is actually safe at <code>T</code> (i.e. not really pinned).</li>
+<li>The promised type <code>R</code> of the mutable reference is <code>P</code>, in which case the parameter of the function
+is robust because its promised type <code>B</code> is unsafe. One must prove that at the end of the borrow,
+the unsafe values don't cause any problem in the rest of the program.</li>
+</ul>
+<h3 id="unwrapping-pin"><a class="header" href="#unwrapping-pin">Unwrapping Pin</a></h3>
+<p>In the mental model, this function is also polymorphic over both types of the mutable reference.
+We'll also introduce the predicate parameters <code>Q</code> and <code>R</code> as above, and name the different values
+<code>A</code>, <code>B</code>, <code>C</code>, and <code>D</code>.</p>
+<pre><code class="language-rust">(Pin&lt;&amp;mut [Update&lt;Q, T&gt; .. Update&lt;R, T&gt;]&gt;) -&gt; &amp;mut [Update&lt;Q, T&gt; .. Update&lt;R, T&gt;]
+//         ^--- A  ---^    ^--- B  ---^             ^---  C ---^    ^---  D ---^</code></pre>
+<p>We can draw a similar table as above assuming the function is the identity function.</p>
+<div class="table-wrapper"><table><thead><tr><th><code>Q</code></th><th><code>R</code></th><th><code>A &lt;: Q</code></th><th><code>R &lt;: B</code></th><th><code>Q &lt;: C</code></th><th><code>D &lt;: R</code></th></tr></thead><tbody>
+<tr><td><code>T</code></td><td><code>T</code></td><td><code>P &lt;: T</code></td><td><code>T &lt;: P</code></td><td><code>T == T</code></td><td><code>T == T</code></td></tr>
+<tr><td><code>T</code></td><td><code>P</code></td><td><code>P &lt;: T</code></td><td><code>P == P</code></td><td><code>T == T</code></td><td><code>T &lt;: P</code></td></tr>
+<tr><td><code>P</code></td><td><code>T</code></td><td><code>P == P</code></td><td><code>T &lt;: P</code></td><td><code>P &lt;: T</code></td><td><code>T == T</code></td></tr>
+<tr><td><code>P</code></td><td><code>P</code></td><td><code>P == P</code></td><td><code>P == P</code></td><td><code>P &lt;: T</code></td><td><code>T &lt;: P</code></td></tr>
+</tbody></table>
+</div>
+<p>Same as above, the function is unsafe when the subtyping relation does not hold, usually because of
+<code>P &lt;: T</code>. Similarly, we can look at the 2 reasons (assuming <code>T &lt;: P</code>) why the function can be
+unsafe:</p>
+<ul>
+<li>The type <code>Q</code> of the mutable reference is <code>T</code>, in which case the parameter of the function is
+unsafe because its type <code>A</code> is robust. One must prove that the value is actually safe at <code>T</code> when
+calling the function.</li>
+<li>The type <code>Q</code> of the mutable reference is <code>P</code>, in which case the result of the function is unsafe
+because its type <code>C</code> is unsafe. One must prove that the unsafe values don't cause any problem.</li>
+</ul>
+<h3 id="unpin"><a class="header" href="#unpin">Unpin</a></h3>
+<p>A type is <code>Unpin</code> if <code>P</code> is equal to <code>T</code>. It essentially has no pinned typestate and a single safety
+invariant.</p>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<p>To be done (see <a href="https://github.com/ia0/unsafe-mental-model/issues/2">https://github.com/ia0/unsafe-mental-model/issues/2</a>).</p>
+<div class="footnote-definition" id="issue"><sup class="footnote-definition-label">1</sup>
+<p>Please open an issue on Github if you find a bug.</p>
+</div>
+<div class="footnote-definition" id="safe-subtype-pin"><sup class="footnote-definition-label">2</sup>
+<p>Definition 3b of
+<a href="https://www.ralfj.de/blog/2018/04/05/a-formal-look-at-pinning.html">https://www.ralfj.de/blog/2018/04/05/a-formal-look-at-pinning.html</a> requires this subtyping
+relation to hold.</p>
+</div>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="the-update-type-1"><a class="header" href="#the-update-type-1">The update type</a></h1>
+<p>An attempt to add the update type to Rust could be something like this:</p>
+<pre><code class="language-rust">/// Generic wrapper over valid values of type T.
+///
+/// The predicate P describes which valid values are safe at the wrapped type.
+#[lang = "update"]
+#[repr(transparent)]
+pub struct Update&lt;P, T&gt; {
+    predicate: PhantomData&lt;P&gt;,
+    value: T,
+}
+
+impl&lt;P, T&gt; Update&lt;P, T&gt; {
+    /// Wraps a value.
+    ///
+    /// # Safety
+    ///
+    /// The predicate P must hold for the parameter.
+    ///
+    /// # Robustness
+    ///
+    /// - The parameter doesn't need to be a safe value.
+    /// - This is the identity function.
+    pub robust unsafe fn wrap(value: T) -&gt; Self {
+        Update { predicate: PhantomData&lt;P&gt;, value }
+    }
+
+    /// Unwraps a value.
+    ///
+    /// # Robustness
+    ///
+    /// - The predicate P holds for the result.
+    /// - This is the identity function.
+    ///
+    /// # Safety
+    ///
+    /// The result is not necessarily a safe value.
+    pub robust unsafe fn unwrap(self) -&gt; T {
+        self.value
+    }
+}</code></pre>
+<p>It's not clear what restrictions this type needs to have to be safe. It shouldn't implement any
+trait that provides safe access to the value (e.g. Deref and DerefMut). Producing (resp. consuming)
+an update type should always be unsafe because the predicate may be robust (resp. unsafe).</p>
+<h2 id="examples-2"><a class="header" href="#examples-2">Examples</a></h2>
+<p>Pin is a specific instance of the update type where <code>T</code> implements Deref and DerefMut in a specific
+way, such that implementing Deref and DerefMut for Pin is safe.</p>
+<pre><code class="language-rust">/// # Safety
+///
+/// If `T` implements Deref, it must not break "Pinned T". Idem for DerefMut.
+pub struct Pin&lt;T&gt;(Update&lt;"Pinned T", T&gt;);</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="the-robust-keyword"><a class="header" href="#the-robust-keyword">The robust keyword</a></h1>
+<p>Robust is the dual of unsafe with respect to variance. It is thus natural to imagine a notation for
+it. The main reason this doesn't exist is because it is not recommended to actively document a type
+as robust. This should only be done when the robustness of the type is needed for a proof, thus
+justifying the burden of making sure the implementation is actually robust.</p>
+<p>Let's look at a world where <code>robust</code> is the dual keyword of <code>unsafe</code>. We'll make the update type
+explicit for clarity, but it may be omitted.</p>
+<pre><code class="language-rust">/// Prints a message to the standard output.
+///
+/// # Robustness
+///
+/// The message doesn't need to be valid UTF-8.
+pub robust fn supersafe_print(msg: &amp;Update&lt;str&gt;);
+
+/// Consumes a box returning its raw pointer.
+///
+/// # Robustness
+///
+/// The pointer will be properly aligned and non-null.
+pub robust fn into_raw(b: Box&lt;T&gt;) -&gt; Update&lt;*mut T&gt;</code></pre>
+<p>Note that a function may be both robust and unsafe.</p>
+<pre><code class="language-rust">/// Returns the n-th valid `char` of a string.
+///
+/// # Robustness
+///
+/// The string doesn't need to be valid UTF-8.
+///
+/// # Safety
+///
+/// There must be at least `n` valid `char`s in `s`. A `char` is valid in the
+/// string if it is the first sequence of bytes that form a UTF-8 `char` since
+/// the previous valid `char` in the string (or the beginning of the string).
+pub robust unsafe fn chars_nth(s: &amp;Update&lt;str&gt;, n: Update&lt;usize&gt;) -&gt; char;</code></pre>
+<p>The robust keyword would also bring clarity to unsafe traits. When a trait is unsafe only because
+some of its non-inherited methods or associated constants are robust, then it actually doesn't need
+to be unsafe.</p>
+<pre><code class="language-rust">/// Dynamic management of some large owned allocation.
+trait Allocator {
+    /// Allocates a small allocation from the large allocation.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error in the following conditions:
+    /// - The layout is not supported by the allocator.
+    /// - There is not enough available space in the large allocation.
+    ///
+    /// # Robustness
+    ///
+    /// The result points to a small allocation from the large allocation with
+    /// the following properties:
+    /// - It does not alias with any previously allocated (and not yet
+    ///   deallocated) small allocations.
+    /// - It is not null (a consequence of coming from the large allocation).
+    /// - It satisfies the layout (correct size and alignment).
+    ///
+    /// Note that the small allocation is uninitialized and thus not valid for
+    /// read.
+    robust fn allocate(&amp;self, layout: Layout) -&gt; Result&lt;Update&lt;*mut u8&gt;, AllocError&gt;;
+
+    /// Deallocates a small allocation back to the large allocation.
+    ///
+    /// # Safety
+    ///
+    /// The following properties must hold:
+    /// - The pointer comes from a previous call to `allocate()` with the same
+    ///   layout.
+    /// - The pointer has not yet been deallocated yet (a consequence of the
+    ///   next point).
+    /// - The pointer will not be used anymore. The ownership of the small
+    ///   allocation it represents is given back to the allocator.
+    unsafe fn deallocate(&amp;self, ptr: Update&lt;*mut u8&gt;, layout: Layout);
+}</code></pre>
+<p>Notice how implementing the trait is safe. Implementing <code>allocate()</code> will require some proof of
+robustness and thus be "unsafe" to implement. Implementing <code>deallocate()</code> on the other hand is
+"safe". One can simply leak the pointer. However in practice, one will probably modify the allocator
+internal state to be able to reuse that small allocation. This will require some proofs that some
+allocator invariant is preserved, which is "unsafe". The next chapter discusses exactly this topic
+of invariants.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="proof-fields"><a class="header" href="#proof-fields">Proof fields</a></h1>
+<p>Fields may use anonymous types, either to be robust and/or unsafe. This usually encodes the
+invariant of the struct (or more generally any custom type). Writing to those fields require to
+update the proof too. More generally, modifying anything that the predicate relies on, requires to
+update the proof.</p>
+<pre><code class="language-rust">/// Vectors of at most 1024 bytes.
+pub struct Vec1024 {
+    /// Storage of the vector.
+    ///
+    /// # Robustness
+    ///
+    /// Points to an allocation of 1024 bytes and is owned.
+    ptr: Update&lt;*mut u8&gt;,
+
+    /// Length of the vector.
+    ///
+    /// # Robustness
+    ///
+    /// - Always smaller than or equal to 1024.
+    /// - The storage prefix of that length is initialized.
+    len: Update&lt;usize&gt;,
+}
+
+impl Vec1024 {
+    pub fn push(&amp;mut self, x: u8) {
+        assert!(self.len &lt; 1024);
+
+        // SAFETY: The addition stays within the allocation by the check above.
+        // The write is thus also valid.
+        unsafe { self.ptr.add(self.len).write(x) };
+
+        // SAFETY: The new length is safe because:
+        // - The old length was smaller than 1024 by the check above and only 1
+        //   is added, it is thus smaller than or equal to 1024.
+        // - The pointed prefix is initialized because it was initialized up to
+        //   the last byte and we just wrote the last byte.
+        unsafe { self.len += 1 };
+    }
+}</code></pre>
+<p>It is sometimes more convenient to have a single proof field to gather all invariants. One needs to
+prove the invariant is preserved each time a field (or something else) referred by the predicate is
+modified.</p>
+<pre><code class="language-rust">/// Vectors of at most 1024 bytes.
+pub struct Vec1024 {
+    ptr: *mut u8,
+    len: usize,
+
+    /// Invariant.
+    ///
+    /// # Robustness
+    ///
+    /// - The pointer points to an allocation of 1024 bytes and is owned.
+    /// - The length is always smaller than or equal to 1024.
+    /// - The pointed prefix of size length is initialized.
+    inv: Proof,
+}
+
+impl Vec1024 {
+    pub fn push(&amp;mut self, x: u8) {
+        assert!(self.len &lt; 1024);
+
+        // SAFETY: The invariant is trivially preserved (neither the pointer nor
+        // the length have been modified). The addition stays within the
+        // allocation by the check above. The write is thus also valid.
+        unsafe { self.ptr.add(self.len).write(x) };
+
+        // SAFETY: The invariant is preserved:
+        // - The length is smaller than or equal to 1024 because it was smaller
+        //   than 1024 and only 1 is added.
+        // - The pointed prefix is initialized because it was initialized up to
+        //   the last byte before and we just wrote the last byte.
+        unsafe { self.len += 1 };
+    }
+}</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="unsafe-reviews"><a class="header" href="#unsafe-reviews">Unsafe reviews</a></h1>
+<p>Unsafe reviews is the process of reviewing unsafe code for soundness. For those reviews to be
+sustainable on code change, it is important to not trigger a review too often while still triggering
+each time it is needed. The current approach is to trigger a review when a file containing the
+unsafe keyword is modified. This is a good approximation in the sense that if files with the unsafe
+keyword are kept small then reviews won't trigger too often. However, it may also miss some reviews
+when unsafe code relies on properties outside files with the unsafe keyword (like robust
+implementations).</p>
+<h2 id="sound-triggering"><a class="header" href="#sound-triggering">Sound triggering</a></h2>
+<p>If the robust keyword existed, unsafe reviews could trigger on files containing any of those 2
+keywords. By making sure during unsafe review that proofs only rely on documented robust properties
+(parameter of unsafe function or result of robust function), this would make sure that unsafe review
+will trigger each time it is needed.</p>
+<p>Here are some examples of proofs that depended on undocumented or incorrect robustness:</p>
+<ul>
+<li><a href="https://github.com/rust-lang/regex/pull/1154">https://github.com/rust-lang/regex/pull/1154</a></li>
+<li><a href="https://github.com/rust-lang/rust/issues/80335">https://github.com/rust-lang/rust/issues/80335</a></li>
+<li><a href="https://rustsec.org/advisories/RUSTSEC-2024-0019.html">https://rustsec.org/advisories/RUSTSEC-2024-0019.html</a></li>
+</ul>
+<h2 id="burden-of-proof"><a class="header" href="#burden-of-proof">Burden of proof</a></h2>
+<p>To avoid increasing the burden of unsafe reviews, it is important that items are not documented as
+robust unless it is known that a proof relies on them. To ensure this, robust items should also
+document in their robustness section which crates rely on their robustness. This could alternatively
+be tracked in a separate global tool like <a href="https://github.com/mozilla/cargo-vet"><code>cargo-vet</code></a>.</p>
+<p>For example, one should not implement <a href="https://doc.rust-lang.org/std/iter/trait.TrustedLen.html"><code>TrustedLen</code></a> unless it is relied upon somewhere.
+This is deliberately a borderline example to show that it is actually a trade-off between increasing
+the burden of proof and implementing possibly useful functionalities.</p>
+<h2 id="recommended-lints"><a class="header" href="#recommended-lints">Recommended lints</a></h2>
+<p>It is almost obligatory to enable <a href="https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html#unsafe-op-in-unsafe-fn">unsafe-op-in-unsafe-fn</a> which is allowed-by-default up to edition
+2021 and warn-by-default starting from edition 2024. Not using this lint will:</p>
+<ul>
+<li>give you a wrong mental model conflating unsafe in types (properties) and unsafe in code (proofs)
+as described in the <a href="https://rust-lang.github.io/rfcs/2585-unsafe-block-in-unsafe-fn.html">RFC</a>,</li>
+<li>conflict with undocumented-unsafe-blocks described below,</li>
+<li>conflict with multiple-unsafe-ops-per-block described below.</li>
+</ul>
+<p>The following lints will help unsafe review further:</p>
+<ul>
+<li><a href="https://rust-lang.github.io/rust-clippy/master/index.html#/undocumented_unsafe_blocks">undocumented-unsafe-blocks</a> is the most important one. Without it, unsafe reviewers have to
+reverse the invariants by reading all the code. Anything non-local should be avoided during
+reviews.</li>
+<li><a href="https://rust-lang.github.io/rust-clippy/master/index.html#/multiple_unsafe_ops_per_block">multiple-unsafe-ops-per-block</a> is related but secondary. Without it, the safety comment may
+either (best case scenario) be proving multiple unsafe superpowers being used at the same time
+resulting in possible confusion, or (worst case scenario) forgetting to prove one of the unsafe
+superpowers being used resulting in the same issue as if undocumented-unsafe-blocks was not
+enabled.</li>
+</ul>
+<p>Finally, <a href="https://doc.rust-lang.org/rustc/lints/listing/warn-by-default.html#unused-unsafe">unused-unsafe</a> (which is warn-by-default) is the other side of
+multiple-unsafe-ops-per-block. Both together ensure that there is a one-to-one correspondence
+between the usage of unsafe superpower and the safety comment proving its soundness, thus
+simplifying unsafe reviews.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="type-theory"><a class="header" href="#type-theory">Type theory</a></h1>
+<p>This chapter is meant for those looking for something more formal. Either how the mental model could
+be made more formal, or where does the mental model come from. It is work in progress and can use
+your help. Feel free to open issues or pull requests.</p>
+<h2 id="existing-work"><a class="header" href="#existing-work">Existing work</a></h2>
+<p>The mental model is inspired by the following concepts:</p>
+<ul>
+<li>The <a href="https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence">Curry-Howard isomorphism</a> for internalizing the notions of predicates and
+proofs in the programming language. The decision of doing so being that programmers may be able to
+translate their intuition regarding code and types to proofs and predicates, in particular to
+understand that receiving a proof means you can use it to produce another proof, and that a proof
+implements a predicate.</li>
+<li><a href="https://en.wikipedia.org/wiki/Dependent_type">Dependent types</a> for predicates to depend on the execution environment (the
+memory, variables, etc). In particular, the update type is the sigma type.</li>
+<li><a href="https://en.wikipedia.org/wiki/Denotational_semantics">Denotational semantics</a> for interpreting types as their set of values.</li>
+<li><a href="https://plv.mpi-sws.org/rustbelt/">RustBelt</a> for letting unsafe escape the syntactic type system but capturing it within the
+semantic type system.</li>
+<li><a href="https://theses.hal.science/tel-00940511">Erasable coercions</a> for considering all the typing (in particular the environment) as
+part of the semantics for subtyping. This is why we can talk about the execution environment in
+type interpretations: we are actually interpreting the whole typing, not just the type. This is
+only done for functional programming languages and would need to be adapted for imperative ones.</li>
+<li><a href="https://people.mpi-sws.org/~dreyer/papers/rusthornbelt/paper.pdf">RustHornBelt</a> for the idea of prophecies to explain the promised type of mutable references.</li>
+<li>Refinement types which the update type is similar to. The main difference is that the update
+refines the validity invariant, not the type itself.</li>
+</ul>
+<h2 id="breaking-the-dependency"><a class="header" href="#breaking-the-dependency">Breaking the dependency</a></h2>
+<p>Using documentation and comments instead of types and code is mostly for practical reasons.</p>
+<p>It is impractical to write types like <code>Proof&lt;"# Safety\n\nThe absolute value of the result is smaller than or equal to 1000."&gt;</code> and code like <code>Update { proof: "// SAFETY: We know that arguments are small, so some small linear combination is only slightly bigger.", value: () }</code>.</p>
+<p>But moving predicates out of types also breaks the dependency they have on the execution
+environment. A consequence of this choice is that it looks like we get some form of type erasure,
+but this is only in appearance. Even though the properties are erased from the types, the programmer
+must know at runtime the properties of all proofs (both parameters and results). For example, having
+a vector of function pointers like <code>Vec&lt;fn(Proof)&gt;</code> would need the programmer to know for each
+element, what are the properties expected to hold to call the function, because they may differ from
+one element to the other.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="glossary"><a class="header" href="#glossary">Glossary</a></h1>
+<ul>
+<li><a href="what-is-unsafe.html#anonymous-types">anonymous type</a>: A type built from its interpretation, thus without syntax.</li>
+<li><a href="unsafe-traits.html">associated proof</a>: An associated constant of the proof type.</li>
+<li><a href="what-is-unsafe.html#validity">bottom type</a>: The type with an empty interpretation.</li>
+<li><a href="what-is-unsafe.html#properties">permissions to use</a>: Characteristic of a robust type.</li>
+<li><a href="mutable-references.html">promised type</a>: The type at the end of a borrow of a mutable reference.</li>
+<li><a href="what-is-unsafe.html#properties">restrictions to use</a>: Characteristic of an unsafe type.</li>
+<li><a href="what-is-unsafe.html#properties">robust type</a>: An anonymous type missing some safe values.</li>
+<li><a href="what-is-unsafe.html#properties">safe type</a>: A Rust type (its interpretation is exactly the safe values).</li>
+<li><a href="what-is-unsafe.html#validity">safe value</a>: A value satisfying the safety invariant.</li>
+<li><a href="what-are-types.html#type-systems">soundness</a>: The property of type systems that only accept defined programs.</li>
+<li><a href="what-are-types.html#subtyping">subtyping</a>: The inclusion relation between type interpretations.</li>
+<li><a href="what-are-types.html#types">type interpretation</a>: A mapping from types to their set of values.</li>
+<li><a href="what-is-unsafe.html#properties">unsafe type</a>: An anonymous type containing some unsafe values.</li>
+<li><a href="what-is-unsafe.html#validity">unsafe value</a>: A valid but not safe value.</li>
+<li><a href="what-is-unsafe.html#validity">valid value</a>: A value satisfying the validity invariant.</li>
+<li><a href="what-are-types.html#types">value</a>: A part of the execution of a program.</li>
+<li><a href="what-are-types.html#variance">variance</a>: Type-level functions behavior regarding subtyping.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="references"><a class="header" href="#references">References</a></h1>
+<p>Some useful (and official) documentation regarding unsafe:</p>
+<ul>
+<li>The <a href="https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html">unsafe Rust</a> section of the Rust book.</li>
+<li>The <a href="https://doc.rust-lang.org/nightly/std/keyword.unsafe.html">unsafe keyword</a> documentation in the standard library.</li>
+<li>The <a href="https://doc.rust-lang.org/nightly/reference/unsafe-keyword.html">unsafe keyword</a> section in the Rust reference.</li>
+<li>The <a href="https://github.com/rust-lang/unsafe-code-guidelines">unsafe code guidelines</a>.</li>
+<li>The <a href="https://github.com/rust-lang/nomicon">Rustonomicon</a>.</li>
+<li>The <a href="https://doc.rust-lang.org/reference/subtyping.html">subtyping and variance</a> section of the Rust reference.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </div>
+    </body>
+</html>

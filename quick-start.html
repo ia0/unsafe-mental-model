@@ -1,0 +1,453 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Quick start - Mental model for unsafe in Rust</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Mental model for unsafe in Rust</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/ia0/unsafe-mental-model" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/ia0/unsafe-mental-model/edit/main/src/quick-start.md" title="Suggest an edit" aria-label="Suggest an edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="quick-start"><a class="header" href="#quick-start">Quick start</a></h1>
+<p>This chapter provides an overview of the mental model with practical examples, to let you quickly
+decide if the book is for you or not. If you plan to read the book regardless, you can skip this
+chapter. It doesn't contain any information that is not already present in the rest of the book.
+However, you may come back to it later for a quick refresher.</p>
+<h2 id="concepts"><a class="header" href="#concepts">Concepts</a></h2>
+<p>The mental model relies on the following concepts. You don't need to understand <del>all of them</del> any
+of them. They are quite complicated. But knowing they exist is already a first step. You can just
+read through and skip anything you don't understand on first read:</p>
+<ul>
+<li>There is a notion of <strong>semantic types</strong>. A semantic type is a set of execution states.</li>
+<li>Semantic types define a <strong>contract</strong> between parts of a program: the <strong>producers</strong> and the
+<strong>consumers</strong>. The contract is that, the producers must produce at most the execution states of
+the type, and the consumers must be able to consume at least the execution states of the type.</li>
+<li>This notion of contract is closely related to the notion of <strong>subtyping</strong>. A semantic type is a
+subtype of another if its set of execution states is included in those of the other type. In
+particular, a contract holds if the producers are a subtype of the consumers (the actual type
+being a witness somewhere in between).</li>
+<li><strong>Variance</strong> is how functions over semantic types (a function that takes one or more semantic
+types and returns a semantic type) influence subtyping (or equivalently the roles of producers and
+consumers). Co-variance preserves subtyping from the result to the parameter. Contra-variance
+inverses that subtyping (producers of the result become consumers of the parameter, and
+symmetrically consumers of the result become producers of the parameter). In-variance ignores that
+subtyping and requires the parameter to be the same (producers of the result become both producers
+and consumers of the parameter, and similarly for consumers of the result).</li>
+<li>Syntactical types map to semantic types (or functions over semantic types) by their <strong>safety
+invariant</strong> and are thus a subset of semantic types. So we'll just say <strong>types</strong> to mean semantic
+types and explicitly say <em>syntactical</em> otherwise.</li>
+<li>Syntactical types also have a notion of <strong>validity invariant</strong> representing how they get compiled.
+The safety invariant is always a subtype of the validity invariant. Soundness relies on the safety
+invariant while compilation relies on the validity invariant.</li>
+<li>The <strong>update type</strong> <code>Update&lt;P, T&gt;</code> updates the safety invariant of a syntactical type <code>T</code> with a
+type <code>P</code>. The validity invariant is preserved, thus <code>P</code> must be a subtype of that validity
+invariant. In practice, the type <code>P</code> is almost never syntactical and thus described in
+documentation.</li>
+<li>The update type <code>Update&lt;P, T&gt;</code> is <strong>unsafe</strong> if <code>P \ T</code> is not empty, and it is <strong>robust</strong> if <code>T \ P</code> is not empty.</li>
+<li>The update type can be <strong>lifted</strong> through syntactical types: <code>Foo&lt;Update&lt;P, T&gt;&gt;</code> is the same as
+<code>Update&lt;Foo&lt;P&gt;, Foo&lt;T&gt;&gt;</code> by definition. The notions of unsafe types and robust types follow
+variance through lifting.</li>
+<li><strong>Functions</strong> <code>fn(P) -&gt; R</code> are contra-variant in <code>P</code> (they consume it) and co-variant in <code>R</code> (they
+produce it).</li>
+<li><strong>Mutable references</strong> have actually 2 types with the same validity invariant. We write them <code>&amp;mut [T .. S]</code> where <code>T</code> is the current type and <code>S</code> is the promised type at the end of the borrow.
+They are co-variant in <code>T</code> (they produce it) and contra-variant in <code>S</code> (they consume it).</li>
+<li><strong>Unsafe</strong> is when a contract does not hold: a value of type <code>T</code> is expected to have type <code>S</code> but
+<code>T</code> is not a subtype of <code>S</code>. In that case, a manual proof that the value is actually of type <code>S</code>
+is needed to restore soundness.</li>
+</ul>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h3 id="sliceget_unchecked"><a class="header" href="#sliceget_unchecked">slice::get_unchecked()</a></h3>
+<pre><code class="language-rust">/// Safety: P is the set of usize smaller than xs.len()
+unsafe fn get_unchecked(xs: &amp;[u8], i: Update&lt;P, usize&gt;) -&gt; &amp;u8;</code></pre>
+<p>The type <code>Update&lt;P, usize&gt;</code> contains all valid integers of type <code>usize</code> smaller than <code>xs.len()</code>. It
+is quite subtle, but notice how the definition of <code>P</code> mentions <code>xs.len()</code>. To be more precise, <code>P</code>
+is the set of execution states where <code>i &lt; xs.len()</code>. It is attached to <code>i</code> because it must hold when
+<code>i</code> is passed as argument. It's a contract between the caller (producer of <code>i</code>) and the callee
+(consumer of <code>i</code>).</p>
+<p>Using arithmetic, we can show that <code>Update&lt;P, usize&gt;</code> is at least missing <code>usize::MAX</code> from the
+safety invariant of <code>usize</code>. Because <code>usize \ P</code> is not empty (it contains <code>usize::MAX</code>), the type
+<code>Update&lt;P, usize&gt;</code> is a robust type.</p>
+<p>Note that <code>Update&lt;P, usize&gt;</code> is also a subtype of the validity invariant of <code>usize</code> (because it's
+the same as its safety invariant) and thus doesn't break compilation. We won't check this in the
+future because it's not interesting.</p>
+<p>Now we can lift the update type through the function type and get something like this:</p>
+<pre><code class="language-rust">/// Safety: P is the set of usize smaller than xs.len()
+get_unchecked: Update&lt;fn(xs: &amp;[u8], i: P) -&gt; &amp;u8, fn(&amp;[u8], usize) -&gt; &amp;u8&gt;;</code></pre>
+<p>This very long type contains all valid functions of type <code>fn(&amp;[u8], usize) -&gt; &amp;u8</code> that only accept
+values <code>i</code> smaller than <code>xs.len()</code>. There are a few things to say:</p>
+<ul>
+<li>It is important to filter from <em>valid</em> functions and not just <em>safe</em> functions. For <code>usize</code> it
+didn't make a difference because both the safety and validity invariants are the same type. But
+for functions they are actually different. The validity invariant contains many more functions. It
+contains all the unsafe functions in addition to the safe functions that the safety invariant
+contains.</li>
+<li>While in <code>Update&lt;P, usize&gt;</code> we removed some values from the safety invariant, now we are actually
+adding values. This makes the type unsafe, which is why the function is annotated <code>unsafe fn</code> and
+documented with a <code>Safety</code> section. The fact that the update type changed from robust to unsafe is
+due to variance. It was in a contra-variant position.</li>
+<li>We may wonder what those additional unsafe values are. One of them is actually the implementation
+of <code>get_unchecked</code>: a function that would do an out-of-bound access if it were provided a safe
+(more precisely valid) value at <code>usize</code> but unsafe at <code>Update&lt;P, usize&gt;</code>.</li>
+</ul>
+<p>Now that we've looked at the type of <code>get_unchecked</code>, let's look at a call site (the function
+definition is not interesting).</p>
+<pre><code class="language-rust">// SAFETY: 3 is smaller than 11 which is b"hello world".len()
+get_unchecked(b"hello world", unsafe { 3 })</code></pre>
+<p>By typing we have <code>3: usize</code> and we need <code>3: Update&lt;P, usize&gt;</code> to call the function. Because <code>usize</code>
+is not a subtype of <code>Update&lt;P, usize&gt;</code> (it's actually the contrary), this cast is unsafe and
+requires a manual proof. The manual proof refines the type of <code>3</code> from <code>usize</code> to <code>Update&lt;P, usize&gt;</code>
+by looking at the actual execution states and making sure they are all within <code>Update&lt;P, usize&gt;</code>. In
+this case, the value is always 3 and the value of <code>b"hello world".len()</code> is always 11, so the proof
+is rather simple.</p>
+<p>Note that in practice, update types are usually lifted to function types. We could think that
+instead of casting <code>3</code> we could cast <code>get_unchecked</code> like that:</p>
+<pre><code class="language-rust">// SAFETY: 3 is smaller than 11 which is b"hello world".len()
+unsafe { get_unchecked }(b"hello world", 3)</code></pre>
+<p>But we cannot cast <code>get_unchecked</code> back to <code>fn(&amp;[u8], usize) -&gt; &amp;u8</code> because <code>get_unchecked</code> is
+actually not a member of that type. The only solution is to attach the proof to the call-site itself
+where the arguments are accessible.</p>
+<pre><code class="language-rust">// SAFETY: 3 is smaller than 11 which is b"hello world".len()
+unsafe { get_unchecked(b"hello world", 3) }</code></pre>
+<h3 id="boxinto_raw"><a class="header" href="#boxinto_raw">Box::into_raw()</a></h3>
+<pre><code class="language-rust">/// Robustness: P is the set of non-null pointers
+robust fn into_raw&lt;T&gt;(b: Box&lt;T&gt;) -&gt; Update&lt;P, *mut T&gt;;</code></pre>
+<p>The type <code>Update&lt;P, *mut T&gt;</code> contains all valid (in the sense of the validity invariant, not in the
+sense of valid for read or write) pointers of type <code>*mut T</code> that are non-null. By definition, this
+type is missing <code>null_mut()</code> from the safety invariant of <code>*mut T</code>. It is thus a robust type.</p>
+<p>We can lift the update type through the function type and get:</p>
+<pre><code class="language-rust">/// Robustness: P is the set of non-null pointers
+into_raw: for&lt;T&gt; Update&lt;fn(Box&lt;T&gt;) -&gt; P, fn(Box&lt;T&gt;) -&gt; *mut T&gt;;</code></pre>
+<p>This type is missing some functions that are safe at <code>for&lt;T&gt; fn(Box&lt;T&gt;) -&gt; *mut T</code>, in particular
+those that return a null pointer. So this type is also robust. This is why the function is annotated
+<code>robust fn</code> and documented with a <code>Robustness</code> section. The fact that lifting the update type
+preserved its robustness, is due to variance. It was in a co-variant position.</p>
+<p>Let's look at the function definition first (and call-sites later).</p>
+<pre><code class="language-rust">/// Robustness: P is the set of non-null pointers
+robust fn into_raw&lt;T&gt;(b: Box&lt;T&gt;) -&gt; Update&lt;P, *mut T&gt; {
+    let result: *mut T = [...];
+    // SAFETY: The box pointer is non-null by invariant of Box.
+    result
+}</code></pre>
+<p>By typing we have <code>result: *mut T</code> and we need <code>result: Update&lt;P, *mut T&gt;</code> to return from the
+function. Because <code>*mut T</code> is not a subtype of <code>Update&lt;P, *mut T&gt;</code> (it's actually the contrary),
+this cast is unsafe and requires a manual proof. The manual proof refines the type of <code>result</code> from
+<code>*mut T</code> to <code>Update&lt;P, *mut T&gt;</code> by looking at the actual execution states and making sure they are
+all within <code>Update&lt;P, *mut T&gt;</code>. In this case, <code>Box&lt;T&gt;</code> has an internal invariant that the pointer is
+non-null, so the proof simply states this invariant.</p>
+<p>Let's now look at a call-site.</p>
+<pre><code class="language-rust">let p: *mut T = Box::into_raw(b);
+// SAFETY: The pointer was not modified since it was returned by Box::into_raw
+// which ensures it is non-null by robustness. So it is still non-null.
+unsafe { NonNull::new_unchecked(p) }</code></pre>
+<p>First, values may be implicitly cast by subtyping. This is what happens between the result of
+<code>Box::into_raw(b)</code> of type <code>Update&lt;P, *mut T&gt;</code> and the binding type of <code>p</code> which is <code>*mut T</code>,
+because <code>Update&lt;P, *mut T&gt;</code> is a subtype of <code>*mut T</code>. In particular, <code>Update&lt;P, *mut T&gt;</code> is not an
+unsafe type, it is only a robust type. And update types that are not unsafe can safely cast to the
+type they update (without an unsafe block and a safety comment).</p>
+<p>The more interesting fact is how we can transfer the information about execution states after
+<code>Box::into_raw()</code> returns to the unsafe cast even though we lost the type information. We need to
+verify that all execution operations since the last known states produce execution states that match
+the contract we need to prove. This is trivially the case here because the result value is not
+modified.</p>
+<p>In practice, the robustness of <code>Box::into_raw()</code> is much more precise than just returning a non-null
+pointer.</p>
+<pre><code class="language-rust">/// Robustness: Q is the set of non-aliased, aligned, allocated, and valid pointers
+robust fn into_raw&lt;T, P&gt;(b: Box&lt;Update&lt;P, T&gt;&gt;) -&gt; Update&lt;Q, *mut Update&lt;P, T&gt;&gt;;</code></pre>
+<p>The function is actually polymorphic over the type within the Box, which means it doesn't temper its
+content and simply returns the underlying pointer (theorem for free). This correctness property is
+not part of the safe type <code>for&lt;T&gt; fn(Box&lt;T&gt;) -&gt; *mut T</code>, the function could just return any pointer
+(including a null pointer). But updating the parameter and return types we can more precisely
+capture the behavior of the function, which matters when proving unsafe code because of the stronger
+contract.</p>
+<p>The type <code>Q</code> is actually a filter over <code>*mut Update&lt;P, T&gt;</code> and thus more precisely a function over
+types <code>Q(P)</code> parametric over <code>P</code>. So the result type is actually <code>Update&lt;Q(P), *mut T&gt;</code> (the type
+being updated doesn't matter, only its validity invariant does).</p>
+<p>Functions in the standard library may usually be assumed to have such strong robustness guarantees,
+in contrary to other libraries for which correctness may not usually be assumed to hold when proving
+unsafe code.</p>
+<h3 id="stringas_mut_vec"><a class="header" href="#stringas_mut_vec">String::as_mut_vec()</a></h3>
+<pre><code class="language-rust">/// Safety: P is the set of safe Vec&lt;u8&gt; that are UTF-8
+unsafe fn as_mut_vec(self: &amp;mut String) -&gt; &amp;mut [Vec&lt;u8&gt; .. Update&lt;P, Vec&lt;u8&gt;&gt;];</code></pre>
+<p>The type <code>Update&lt;P, Vec&lt;u8&gt;&gt;</code> contains all valid values of type <code>Vec&lt;u8&gt;</code> that are safe and UTF-8.
+It is a robust type because it is missing values that are safe (those that are not UTF-8) and does
+not contain unsafe values.</p>
+<p>We can lift the update type through the mutable reference and get:</p>
+<pre><code class="language-rust">/// Safety: P is the set of safe Vec&lt;u8&gt; that are UTF-8
+unsafe fn as_mut_vec(self: &amp;mut String) -&gt; Update&lt;&amp;mut [Vec&lt;u8&gt; .. P], &amp;mut Vec&lt;u8&gt;&gt;;</code></pre>
+<p>We get a similar reasoning as with <code>slice::get_unchecked()</code> because we have a robust type in a
+contra-variant position. The update type contains all valid values of type <code>&amp;mut Vec&lt;u8&gt;</code> that
+promise UTF-8 at the end of the borrow. So compared to the safe values of type <code>&amp;mut Vec&lt;u8&gt;</code>, the
+update type contains additional values (thus unsafe at <code>&amp;mut Vec&lt;u8&gt;</code>). This makes the update type
+unsafe.</p>
+<p>We can finally lift the update type through the function type and get:</p>
+<pre><code class="language-rust">/// Safety: P is the set of Vec&lt;u8&gt; that are UTF-8
+Update&lt;fn(&amp;mut String) -&gt; &amp;mut [Vec&lt;u8&gt; .. P], fn(&amp;mut String) -&gt; &amp;mut Vec&lt;u8&gt;&gt;</code></pre>
+<p>This type also has additional values compared to <code>fn(&amp;mut String) -&gt; &amp;mut Vec&lt;u8&gt;</code> and is thus
+unsafe. This is because the result type of a function is in a co-variant position, and the result
+was unsafe. The function type being thus unsafe, it has a <code>Safety</code> section and is annotated <code>unsafe fn</code>.</p>
+<p>Let's look at a call site.</p>
+<pre><code class="language-rust">/// SAFETY: At the end of the borrow, the message is ASCII, thus UTF-8.
+for byte in unsafe { message.as_mut_vec() } {
+    *byte &amp;= 0x7f;
+}</code></pre>
+<p>By typing we have <code>message.as_mut_vec()</code> of type <code>&amp;mut [Vec&lt;u8&gt; .. Update&lt;P, Vec&lt;u8&gt;&gt;]</code> and we need
+<code>&amp;mut Vec&lt;u8&gt;</code>, i.e. <code>&amp;mut [Vec&lt;u8&gt; .. Vec&lt;u8&gt;]</code>. Because this does not hold by subtyping (the
+promised type is robust, making the mutable reference unsafe), we need a manual proof. We must
+refine the promised type from <code>Vec&lt;u8&gt;</code> to <code>Update&lt;P, Vec&lt;u8&gt;&gt;</code> by contra-variance of the promised
+type, i.e. we must prove that the promised type is UTF-8. Because we convert all bytes to ASCII
+before the borrow ends, and don't modify the message further, we can claim that the message at the
+end of the borrow is ASCII and thus UTF-8.</p>
+<p>In practice, <code>String::as_mut_vec()</code> is also robust:</p>
+<pre><code class="language-rust">/// Safety and Robustness: P is the set of safe Vec&lt;u8&gt; that are UTF-8
+robust unsafe fn as_mut_vec(self: &amp;mut String) -&gt; &amp;mut Update&lt;P, Vec&lt;u8&gt;&gt;;</code></pre>
+<p>This function is both robust and unsafe. It is unsafe for the same reason as above (the type is
+robust at the end of the borrow) and it is robust because the returned type is robust at the
+beginning of the borrow. By being robust, this function type provides more freedom to call-sites.
+The following call-site would be unsound with the non-robust function type, but is sound with the
+robust function type.</p>
+<pre><code class="language-rust">/// SAFETY: Assuming the message is UTF-8 at the beginning of the borrow, it is still
+/// UTF-8 at the end of the borrow.
+for bytes in unsafe { message.as_mut_vec() }.chunks_exact_mut(2) {
+    // Convert code points encoded with 2 bytes at even offsets to ASCII.
+    if bytes[0] &amp; 0xe0 == 0xc0 {
+        bytes[0] &amp;= 0x3f;
+        bytes[1] &amp;= 0x7f;
+    }
+}</code></pre>
+<p>To go even further, because <code>String::as_mut_vec()</code> is part of the standard library, it is even more
+robust than the previous function type. It is actually polymorphic over the type of <code>self</code> (which
+contains 2 types because it's a mutable reference):</p>
+<pre><code class="language-rust">/// Safety and Robustness: P and Q are sets of valid values of Vec&lt;u8&gt;
+robust unsafe fn as_mut_vec&lt;P, Q&gt;(
+    self: Update&lt;&amp;mut [P .. Q], &amp;mut String&gt;
+) -&gt; Update&lt;&amp;mut [P .. Q], &amp;mut Vec&lt;u8&gt;&gt;;</code></pre>
+<p>The most common case is when the parameter is safe. This means both <code>P</code> and <code>Q</code> are the safety
+invariant of <code>String</code>, i.e. the set of UTF-8 values. But it is possible to also use unsafe or robust
+types (with respect to <code>String</code>) for <code>P</code> and <code>Q</code> independently of each other. An artificial example
+could look like this:</p>
+<pre><code class="language-rust">/// Sanitizes a string to make it UTF-8.
+///
+/// # Robustness
+///
+/// The message doesn't need to be UTF-8.
+robust fn sanitize(message: &amp;mut [Update&lt;Vec&lt;u8&gt;, String&gt; .. String]) {
+    // SAFETY: The message is ASCII at the end of the borrow.
+    for byte in unsafe { message.as_mut_vec::&lt;Vec&lt;u8&gt;, ASCII&gt;() } {
+        *byte &amp;= 0x7f;
+    }
+    // SAFETY(parameter): The message is ASCII at the beginning of the borrow.
+    // SAFETY(result): The message remains ASCII and is thus UTF-8 at the end of the
+    // borrow.
+    for byte in unsafe { message.as_mut_vec::&lt;ASCII, String&gt;() } {
+        *byte ^= 0x07;
+    }
+}</code></pre>
+<p>We already discussed the first transformation, so let's focus on the second one. By typing we have
+<code>message</code> of type <code>&amp;mut String</code> and <code>message.as_mut_vec()</code> of type <code>Update&lt;&amp;mut [ASCII .. String], &amp;mut Vec&lt;u8&gt;&gt;</code>. We need <code>message</code> to have type <code>Update&lt;&amp;mut [ASCII .. String], &amp;mut String&gt;</code> and
+<code>message.as_mut_vec()</code> to have type <code>&amp;mut Vec&lt;u8&gt;</code>. Both casts are unsafe because they don't hold by
+subtyping. The first one doesn't hold because we have to prove that <code>message</code> is initially ASCII,
+which we know by preceding code. The second one doesn't hold because we have to prove that
+<code>message.as_mut_vec()</code> is UTF-8 at the end of the borrow, which we do by using the robustness that
+it is initially ASCII and preserving this property to the end of the borrow.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="what-are-types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="what-are-types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
